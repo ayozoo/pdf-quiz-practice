@@ -605,7 +605,10 @@ button {
 .discussion-box .box-content {
   max-height: 500px;
   overflow-y: auto;
+  overflow-x: hidden; /* Force hide horizontal scrollbar */
   padding-right: 8px;
+  white-space: pre-wrap; /* Ensure text wraps */
+  word-break: break-word; /* Ensure long words wrap */
 }
 
 .discussion-box .box-content::-webkit-scrollbar {
@@ -744,6 +747,9 @@ button {
   line-height: 1.6;
   white-space: pre-wrap;
   color: #1e293b;
+  word-break: break-word; /* Prevent long words from causing overflow */
+  overflow-wrap: break-word; /* Standard property for wrapping */
+  max-width: 100%; /* Ensure content doesn't exceed container */
 }
 
 .comment-votes {
