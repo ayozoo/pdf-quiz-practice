@@ -88,6 +88,8 @@ function App() {
     }
   };
 
+  
+
   const handleDeleteOne = async (id: number) => {
     setLoading(true);
     try {
