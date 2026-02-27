@@ -33,11 +33,6 @@ export function ExamPractice({
   const [sidebarWidth, setSidebarWidth] = useState(280); // Increased default width
   const [isResizing, setIsResizing] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  
-  // Calculate columns based on width
-  // Assume ~42px min per item + 8px gap
-  // columns = floor((width - padding) / (itemWidth + gap))
-  const gridColumns = Math.max(3, Math.floor((sidebarWidth - 32) / 50)); 
 
   // Handle resizing
   const startResizing = (e: React.MouseEvent) => {
@@ -241,7 +236,6 @@ export function ExamPractice({
               onSelectExam(-1);
               closeMobileSidebar();
             }}
-            gridColumns={gridColumns}
           />
         ) : (
           <ExamListSidebar

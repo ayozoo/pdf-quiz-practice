@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ExamPractice } from './pages/ExamPractice';
 import { ExamManagement } from './pages/ExamManagement';
+import { TemplateConfig } from './pages/TemplateConfig';
 import type { ExamSummary, ParsedExam } from './types/exam';
 import './App.css';
 
@@ -39,12 +40,15 @@ function App() {
     void loadExamList();
   }, []);
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (file: File, templateId?: number) => {
     setLoading(true);
     setError(null);
     try {
       const formData = new FormData();
       formData.append('file', file);
+      if (templateId) {
+        formData.append('templateId', String(templateId));
+      }
 
       const response = await fetch(`${baseUrl}/pdf/upload`, {
         method: 'POST',
@@ -150,8 +154,13 @@ function App() {
                 onDeleteAll={handleDeleteAll}
                 loading={loading}
                 error={error}
+                baseUrl={baseUrl}
               />
             }
+          />
+          <Route
+            path="/templates"
+            element={<TemplateConfig baseUrl={baseUrl} />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

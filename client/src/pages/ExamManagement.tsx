@@ -1,14 +1,15 @@
-import { useState, type ChangeEvent } from 'react';
-import type { ExamSummary } from '../types/exam';
+import { useState, useEffect, type ChangeEvent } from 'react';
+import type { ExamSummary, PdfTemplateConfig } from '../types/exam';
 import { Trash2, Upload, AlertCircle } from 'lucide-react';
 
 interface ExamManagementProps {
   examList: ExamSummary[];
-  onUpload: (file: File) => Promise<void>;
+  onUpload: (file: File, templateId?: number) => Promise<void>;
   onDeleteOne: (id: number) => Promise<void>;
   onDeleteAll: () => Promise<void>;
   loading: boolean;
   error: string | null;
+  baseUrl: string;
 }
 
 export function ExamManagement({
@@ -18,8 +19,23 @@ export function ExamManagement({
   onDeleteAll,
   loading,
   error,
+  baseUrl,
 }: ExamManagementProps) {
   const [file, setFile] = useState<File | null>(null);
+  const [templates, setTemplates] = useState<PdfTemplateConfig[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    void fetch(`${baseUrl}/templates`)
+      .then((res) => res.json())
+      .then((data: PdfTemplateConfig[]) => {
+        setTemplates(data);
+        // 默认选中内置模版
+        const builtin = data.find((t) => t.isBuiltin);
+        if (builtin) setSelectedTemplateId(builtin.id);
+      })
+      .catch(() => {});
+  }, [baseUrl]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
@@ -29,7 +45,7 @@ export function ExamManagement({
 
   const handleUploadClick = async () => {
     if (file) {
-      await onUpload(file);
+      await onUpload(file, selectedTemplateId);
       setFile(null); // 上传成功后清空文件选择
     }
   };
@@ -45,6 +61,26 @@ export function ExamManagement({
         <div className="upload-section card">
           <h3>上传新题库</h3>
           <div className="upload-area">
+            <div className="upload-template-select">
+              <label className="upload-select-label">解析模版</label>
+              <select
+                className="tpl-field-input tpl-select"
+                value={selectedTemplateId ?? ''}
+                onChange={(e) =>
+                  setSelectedTemplateId(
+                    e.target.value ? parseInt(e.target.value, 10) : undefined,
+                  )
+                }
+              >
+                <option value="">默认模版</option>
+                {templates.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                    {t.isBuiltin ? ' (内置)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
             <input
               type="file"
               accept="application/pdf"
