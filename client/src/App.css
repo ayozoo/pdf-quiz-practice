@@ -289,44 +289,46 @@ body {
   border-color: #d1d5db;
 }
 
-.navigator-grid {
-  display: grid;
-  /* Use fixed column count instead of auto-fill to ensure consistency */
-  /* Remove fixed template, let inline style control it */
-  gap: 8px;
-  padding: 2px; /* Small padding to avoid shadow clipping */
-  padding-bottom: 60px;
-  overflow-y: auto;
-  overflow-x: hidden; /* Force hide horizontal scrollbar */
+/* Scroll wrapper: handles overflow, scrollbar stays outside the grid */
+.navigator-grid-wrapper {
   flex: 1;
-  width: 100%;
-  box-sizing: border-box;
-  
-  /* Scrollbar styles */
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
 }
 
-.navigator-grid::-webkit-scrollbar {
-  display: block;
+.navigator-grid-wrapper::-webkit-scrollbar {
   width: 6px;
 }
 
-.navigator-grid::-webkit-scrollbar-track {
+.navigator-grid-wrapper::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.navigator-grid::-webkit-scrollbar-thumb {
+.navigator-grid-wrapper::-webkit-scrollbar-thumb {
   background-color: #cbd5e1;
   border-radius: 3px;
 }
 
-.navigator-grid::-webkit-scrollbar-thumb:hover {
+.navigator-grid-wrapper::-webkit-scrollbar-thumb:hover {
   background-color: #94a3b8;
 }
 
-.nav-item {
-  aspect-ratio: 1; /* Keep square aspect ratio */
+/* The actual grid — no scrolling here, just layout */
+.navigator-grid {
+  display: grid;
+  gap: 8px;
+  padding: 4px;
+  padding-bottom: 60px;
+  padding-right: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.q-nav-item {
+  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -334,40 +336,39 @@ body {
   border-radius: 6px;
   background: white;
   cursor: pointer;
-  font-size: 0.85rem; /* Slightly smaller font */
+  font-size: 0.85rem;
   color: var(--text-secondary);
   position: relative;
   transition: all 0.2s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Subtle shadow like the screenshot */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  min-width: 0;
 }
 
-.nav-item:hover {
+.q-nav-item:hover {
   border-color: var(--primary-color);
   color: var(--primary-color);
-  z-index: 1; /* Bring to front on hover */
+  z-index: 1;
 }
 
-.nav-item.current {
+.q-nav-item.current {
   background-color: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
 }
 
-/* Submitted but not current */
-.nav-item.submitted:not(.current).correct {
+.q-nav-item.submitted:not(.current).correct {
   background-color: var(--success-bg);
   color: var(--success-color);
   border-color: var(--success-color);
 }
 
-.nav-item.submitted:not(.current).wrong {
+.q-nav-item.submitted:not(.current).wrong {
   background-color: var(--error-bg);
   color: var(--error-color);
   border-color: var(--error-color);
 }
 
-/* Fallback for submitted if status is unknown */
-.nav-item.submitted:not(.current):not(.correct):not(.wrong) {
+.q-nav-item.submitted:not(.current):not(.correct):not(.wrong) {
   background-color: #f3f4f6;
   color: #6b7280;
 }

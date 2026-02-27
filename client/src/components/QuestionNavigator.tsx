@@ -29,38 +29,37 @@ export function QuestionNavigator({
         </button>
       </div>
       
-      <div 
-        className="navigator-grid"
-        style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
-      >
-        {Array.from({ length: totalQuestions }).map((_, idx) => {
-          const isSubmitted = submittedMap[idx];
-          const isCurrent = idx === currentIndex;
-          const status = answerStatusMap[idx] || 'unsubmitted';
-          
-          let className = 'nav-item';
-          if (isCurrent) className += ' current';
-          
-          // 如果已提交，显示对错颜色
-          // 注意：current 样式通常优先，或者可以叠加
-          if (isSubmitted) {
-            className += ' submitted'; // 基础已提交样式
-            if (status === 'correct') className += ' correct';
-            if (status === 'wrong') className += ' wrong';
-          }
+      <div className="navigator-grid-wrapper">
+        <div 
+          className="navigator-grid"
+          style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
+        >
+          {Array.from({ length: totalQuestions }).map((_, idx) => {
+            const isSubmitted = submittedMap[idx];
+            const isCurrent = idx === currentIndex;
+            const status = answerStatusMap[idx] || 'unsubmitted';
+            
+            let className = 'q-nav-item';
+            if (isCurrent) className += ' current';
+            
+            if (isSubmitted) {
+              className += ' submitted';
+              if (status === 'correct') className += ' correct';
+              if (status === 'wrong') className += ' wrong';
+            }
 
-          return (
-            <button
-              key={idx}
-              className={className}
-              onClick={() => onSelect(idx)}
-              title={`第 ${idx + 1} 题${isSubmitted ? (status === 'correct' ? ' (正确)' : ' (错误)') : ''}`}
-            >
-              {idx + 1}
-              {/* {isSubmitted && <span className="status-dot" />} */}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={idx}
+                className={className}
+                onClick={() => onSelect(idx)}
+                title={`第 ${idx + 1} 题${isSubmitted ? (status === 'correct' ? ' (正确)' : ' (错误)') : ''}`}
+              >
+                {idx + 1}
+              </button>
+            );
+          })}
+        </div>
       </div>
       <div className="navigator-legend">
         <div className="legend-item">
