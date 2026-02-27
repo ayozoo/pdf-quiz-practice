@@ -3,7 +3,7 @@ import { ExamDetailDto, ExamService, ExamSummaryDto } from './exam.service';
 
 @Controller('exams')
 export class ExamController {
-  constructor(private readonly examService: ExamService) { }
+  constructor(private readonly examService: ExamService) {}
 
   @Get()
   getAll(): Promise<ExamSummaryDto[]> {

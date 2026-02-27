@@ -37,3 +37,37 @@ export interface ExamSummary {
   questionCount: number;
   createdAt: string;
 }
+
+// ---- PDF 模版相关类型 ----
+export interface PdfTemplateConfig {
+  id: number;
+  name: string;
+  description?: string;
+  isBuiltin: boolean;
+  questionSplitPattern: string;
+  questionNumberPattern: string;
+  optionPattern: string;
+  correctAnswerLinePattern: string;
+  correctAnswerExtractPattern: string;
+  explanationPattern: string;
+  hasDiscussion: boolean;
+  discussionDatePattern?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateTemplatePayload = Omit<PdfTemplateConfig, 'id' | 'isBuiltin' | 'createdAt' | 'updatedAt'>;
+export type UpdateTemplatePayload = Partial<CreateTemplatePayload>;
+
+/** 样本分析/AI 生成返回的建议正则 */
+export interface SuggestedPatterns {
+  questionSplitPattern?: string;
+  questionNumberPattern?: string;
+  optionPattern?: string;
+  correctAnswerLinePattern?: string;
+  correctAnswerExtractPattern?: string;
+  explanationPattern?: string;
+  hasDiscussion?: boolean;
+  discussionDatePattern?: string;
+  hints?: Record<string, string>;
+}
