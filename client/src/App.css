@@ -1,35 +1,54 @@
 :root {
   /* 现代化配色系统 */
-  --primary-color: #4f46e5; /* Indigo 600 */
-  --primary-hover: #4338ca; /* Indigo 700 */
-  --primary-light: #e0e7ff; /* Indigo 100 */
-
-  --bg-color: #f8fafc; /* Slate 50 - 更柔和的背景 */
+  --primary-color: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #e0e7ff;
+  --bg-color: #f8fafc;
   --card-bg: #ffffff;
-
-  --text-main: #0f172a; /* Slate 900 */
-  --text-secondary: #64748b; /* Slate 500 */
-  --text-muted: #94a3b8; /* Slate 400 */
-
-  --border-color: #e2e8f0; /* Slate 200 */
-  --border-light: #f1f5f9; /* Slate 100 */
-
+  --text-main: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border-color: #e2e8f0;
+  --border-light: #f1f5f9;
   --success-color: #10b981;
   --success-bg: #d1fae5;
   --error-color: #ef4444;
   --error-bg: #fee2e2;
-
-  --selected-bg: #eef2ff; /* Indigo 50 */
-  --selected-border: #c7d2fe; /* Indigo 200 */
-
-  /* 侧边栏 - 现代化深色 */
-  --sidebar-bg: #0f172a; /* Slate 900 */
-  --sidebar-text: #94a3b8; /* Slate 400 */
-  --sidebar-hover: #1e293b; /* Slate 800 */
-  --sidebar-active: #4f46e5; /* Indigo 600 */
+  --selected-bg: #eef2ff;
+  --selected-border: #c7d2fe;
+  --sidebar-bg: #0f172a;
+  --sidebar-text: #94a3b8;
+  --sidebar-hover: #1e293b;
+  --sidebar-active: #4f46e5;
   --sidebar-active-text: #ffffff;
+}
 
-  /* 阴影系统 */
+html.dark {
+  --primary-color: #4f46e5;
+  --primary-hover: #6366f1;
+  --primary-light: rgba(79, 70, 229, 0.2);
+  --bg-color: #141414;
+  --card-bg: #1f1f1f;
+  --text-main: rgba(255, 255, 255, 0.85);
+  --text-secondary: rgba(255, 255, 255, 0.65);
+  --text-muted: rgba(255, 255, 255, 0.45);
+  --border-color: #424242;
+  --border-light: #303030;
+  --success-color: #2e7d32;
+  --success-bg: rgba(46, 125, 50, 0.2);
+  --error-color: #d32f2f;
+  --error-bg: rgba(211, 47, 47, 0.2);
+  --selected-bg: rgba(79, 70, 229, 0.2);
+  --selected-border: #4f46e5;
+  --sidebar-bg: #141414;
+  --sidebar-text: rgba(255, 255, 255, 0.65);
+  --sidebar-hover: #1f1f1f;
+  --sidebar-active: #4f46e5;
+  --sidebar-active-text: #ffffff;
+}
+
+:root {
+  /* 阴影与圆角系统 unchanged */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
@@ -370,7 +389,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background-color: white;
+  background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-main);
@@ -419,7 +438,7 @@ body {
   justify-content: center;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  background: white;
+  background: var(--card-bg);
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 500;
@@ -446,21 +465,21 @@ body {
 }
 
 .q-nav-item.submitted:not(.current).correct {
-  background-color: #ecfdf5;
-  color: #059669;
-  border-color: #6ee7b7;
+  background-color: var(--success-bg);
+  color: var(--success-color);
+  border-color: var(--success-color);
 }
 
 .q-nav-item.submitted:not(.current).wrong {
-  background-color: #fef2f2;
-  color: #dc2626;
-  border-color: #fecaca;
+  background-color: var(--error-bg);
+  color: var(--error-color);
+  border-color: var(--error-color);
 }
 
 .q-nav-item.submitted:not(.current):not(.correct):not(.wrong) {
-  background-color: #f8fafc;
-  color: #94a3b8;
-  border-color: #e2e8f0;
+  background-color: var(--bg-color);
+  color: var(--text-muted);
+  border-color: var(--border-color);
 }
 
 .status-dot {
@@ -560,13 +579,14 @@ body {
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-fast);
-  background-color: white;
+  background-color: var(--card-bg);
+  color: var(--text-main);
   align-items: flex-start;
 }
 
 .option-item:hover {
   border-color: var(--primary-light);
-  background-color: #f8fafc;
+  background-color: var(--bg-color);
   transform: translateX(4px);
 }
 
@@ -578,12 +598,12 @@ body {
 
 .option-item.correct {
   border-color: var(--success-color);
-  background-color: #ecfdf5;
+  background-color: var(--success-bg);
 }
 
 .option-item.wrong {
   border-color: var(--error-color);
-  background-color: #fef2f2;
+  background-color: var(--error-bg);
 }
 
 .option-label {
@@ -650,7 +670,7 @@ button:focus-visible {
 }
 
 .btn-nav {
-  background-color: white;
+  background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   color: var(--text-main);
   box-shadow: var(--shadow-sm);
@@ -683,7 +703,7 @@ button:focus-visible {
 }
 
 .btn-toggle {
-  background-color: white;
+  background-color: var(--card-bg);
   border-color: var(--primary-color);
   color: var(--primary-color);
 }
@@ -698,7 +718,7 @@ button:focus-visible {
   margin-top: 24px;
   padding: 20px;
   border-radius: 6px;
-  background-color: #f8fafc;
+  background-color: var(--bg-color);
   border: 1px solid var(--border-color);
   border-left: 4px solid var(--primary-color);
 }
@@ -774,19 +794,19 @@ button:focus-visible {
 }
 
 .comment-item {
-  background-color: white;
+  background-color: var(--card-bg);
   padding: 20px;
   display: flex;
   gap: 16px;
   align-items: flex-start;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   padding-bottom: 20px;
 }
 
 .comment-item:last-child {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 20px;
 }
 
@@ -814,7 +834,7 @@ button:focus-visible {
 
 .user-name {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-main);
   font-size: 0.95rem;
 }
 
@@ -880,26 +900,26 @@ button:focus-visible {
 
 .comment-selected-answer {
   font-size: 0.95rem;
-  color: #334155;
+  color: var(--text-main);
   margin-bottom: 8px;
   font-weight: 600;
 }
 
 .comment-selected-answer .label {
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .comment-selected-answer strong {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-main);
 }
 
 .comment-content {
   font-size: 0.95rem;
   line-height: 1.6;
   white-space: pre-wrap;
-  color: #1e293b;
+  color: var(--text-main);
   word-break: break-word; /* Prevent long words from causing overflow */
   overflow-wrap: break-word; /* Standard property for wrapping */
   max-width: 100%; /* Ensure content doesn't exceed container */
@@ -922,10 +942,16 @@ button:focus-visible {
   width: 100%;
   overflow-y: auto;
   height: 100%;
+  color: var(--text-main);
 }
 
 .page-header {
   margin-bottom: 32px;
+}
+
+.page-header h2 {
+  color: var(--text-main);
+  margin: 0;
 }
 
 .page-subtitle {
@@ -934,11 +960,12 @@ button:focus-visible {
 }
 
 .card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 8px;
   padding: 24px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 24px;
+  color: var(--text-main);
 }
 
 .upload-area {
@@ -967,13 +994,13 @@ button:focus-visible {
   transition:
     border-color 0.2s,
     background-color 0.2s;
-  background-color: #f9fafb;
+  background-color: var(--bg-color);
 }
 
 .file-label:hover {
   border-color: var(--primary-color);
   color: var(--primary-color);
-  background-color: #eff6ff;
+  background-color: var(--selected-bg);
 }
 
 .btn-upload {
@@ -1085,7 +1112,7 @@ button:focus-visible {
 
 /* Template Config Page */
 .tpl-edit-card {
-  background: #f9fafb;
+  background: var(--bg-color);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 20px;
@@ -1154,7 +1181,7 @@ button:focus-visible {
   border-radius: 6px;
   font-size: 0.9rem;
   font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-  background: white;
+  background: var(--card-bg);
   color: var(--text-main);
   transition: border-color 0.2s;
 }
@@ -1166,7 +1193,7 @@ button:focus-visible {
 }
 
 .tpl-field-input:disabled {
-  background: #f3f4f6;
+  background: var(--bg-color);
   color: var(--text-secondary);
 }
 
@@ -1218,7 +1245,7 @@ button:focus-visible {
 }
 
 .tpl-item-header:hover {
-  background: #f9fafb;
+  background: var(--bg-color);
   margin: 0 -24px;
   padding-left: 24px;
   padding-right: 24px;
@@ -1255,8 +1282,8 @@ button:focus-visible {
   align-items: center;
   gap: 3px;
   padding: 2px 8px;
-  background: #dbeafe;
-  color: #2563eb;
+  background: var(--primary-light);
+  color: var(--primary-color);
   border-radius: 99px;
   font-size: 0.7rem;
   font-weight: 600;
@@ -1333,7 +1360,7 @@ button:focus-visible {
 }
 
 .tpl-preview-summary {
-  background: #f9fafb;
+  background: var(--bg-color);
   padding: 12px 16px;
   font-size: 0.9rem;
   border-bottom: 1px solid var(--border-color);
@@ -1347,7 +1374,7 @@ button:focus-visible {
 }
 
 .tpl-preview-q {
-  background: #f9fafb;
+  background: var(--bg-color);
   border-radius: 6px;
   padding: 12px 16px;
 }
@@ -1439,7 +1466,7 @@ button:focus-visible {
   font-size: 0.85rem;
   line-height: 1.6;
   resize: vertical;
-  background: white;
+  background: var(--card-bg);
   color: var(--text-main);
 }
 
@@ -1503,7 +1530,7 @@ button:focus-visible {
 .wizard-ai-config {
   margin-top: 8px;
   padding: 12px;
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   display: flex;
@@ -1562,7 +1589,7 @@ button:focus-visible {
     padding: 0;
     order: 2; /* Move to bottom */
     justify-content: space-around;
-    background-color: white; /* Often white on mobile */
+    background-color: var(--card-bg); /* Adapt to dark mode */
     border-top: 1px solid var(--border-color);
     box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
   }
@@ -1723,7 +1750,7 @@ button:focus-visible {
   .mobile-only-list {
     display: block;
     width: 100%;
-    background: white;
+    background: var(--card-bg);
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -1742,7 +1769,7 @@ button:focus-visible {
   left: 16px;
   z-index: 30;
   padding: 8px;
-  background-color: white;
+  background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

@@ -21,3 +21,8 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+html.dark body {
+  background-color: #141414;
+  color: rgba(255, 255, 255, 0.85);
+}

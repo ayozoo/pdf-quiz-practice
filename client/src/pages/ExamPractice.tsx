@@ -19,13 +19,7 @@ interface ExamProgress {
   submittedMap: Record<number, boolean>;
 }
 
-export function ExamPractice({
-  examList,
-  currentExam,
-  loading,
-  error,
-  onSelectExam,
-}: ExamPracticeProps) {
+export function ExamPractice({ examList, currentExam, loading, onSelectExam }: ExamPracticeProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<Record<number, AnswerOptionLabel[]>>({});
   const [submittedMap, setSubmittedMap] = useState<Record<number, boolean>>({});
@@ -185,10 +179,6 @@ export function ExamPractice({
   const handleSubmitCurrent = () => {
     setSubmittedMap((prev) => ({ ...prev, [currentIndex]: true }));
   };
-
-  if (error) {
-    return <div className="practice-error">{error}</div>;
-  }
 
   return (
     <div className="practice-layout">

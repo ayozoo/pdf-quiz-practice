@@ -1,6 +1,6 @@
 import { useState, useEffect, type ChangeEvent } from 'react';
 import type { ExamSummary, PdfTemplateConfig } from '../types/exam';
-import { Trash2, Upload, AlertCircle } from 'lucide-react';
+import { Trash2, Upload } from 'lucide-react';
 
 interface ExamManagementProps {
   examList: ExamSummary[];
@@ -18,7 +18,6 @@ export function ExamManagement({
   onDeleteOne,
   onDeleteAll,
   loading,
-  error,
   baseUrl,
 }: ExamManagementProps) {
   const [file, setFile] = useState<File | null>(null);
@@ -98,12 +97,6 @@ export function ExamManagement({
               {loading ? '处理中...' : '上传并解析'}
             </button>
           </div>
-          {error && (
-            <div className="error-alert">
-              <AlertCircle size={16} />
-              <span>{error}</span>
-            </div>
-          )}
         </div>
 
         <div className="list-section card">

@@ -1,12 +1,16 @@
 import { type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { BookOpen, Settings, GraduationCap, FileText } from 'lucide-react';
+import { Switch } from 'antd';
+import { useDarkMode } from '../hooks/useDarkMode';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
+  const [darkMode, setDarkMode] = useDarkMode();
+
   return (
     <div className="app-container">
       <aside className="main-sidebar">
@@ -43,6 +47,24 @@ export function Layout({ children }: LayoutProps) {
             <span className="nav-label">模版</span>
           </NavLink>
         </nav>
+
+        <div
+          style={{
+            marginTop: 'auto',
+            padding: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <Switch
+            checked={darkMode}
+            onChange={setDarkMode}
+            checkedChildren="🌙"
+            unCheckedChildren="☀️"
+          />
+        </div>
       </aside>
       <main className="app-content">{children}</main>
     </div>
