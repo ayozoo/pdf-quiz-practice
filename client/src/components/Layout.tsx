@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
-import { BookOpen, Settings, GraduationCap } from 'lucide-react';
+import { BookOpen, Settings, GraduationCap, FileText } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,7 +16,7 @@ export function Layout({ children }: LayoutProps) {
           </div>
           {/* <span className="logo-text">Exam</span> */}
         </div>
-        
+
         <nav className="main-nav">
           <NavLink
             to="/"
@@ -33,6 +33,14 @@ export function Layout({ children }: LayoutProps) {
           >
             <Settings size={24} />
             <span className="nav-label">管理</span>
+          </NavLink>
+          <NavLink
+            to="/templates"
+            className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}
+            title="模版配置"
+          >
+            <FileText size={24} />
+            <span className="nav-label">模版</span>
           </NavLink>
         </nav>
       </aside>

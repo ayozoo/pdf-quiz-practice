@@ -25,7 +25,7 @@ export class ExamService {
     private readonly examRepository: Repository<Exam>,
     @InjectRepository(Question)
     private readonly questionRepository: Repository<Question>,
-  ) { }
+  ) {}
 
   async createFromParsedExam(parsed: ParsedExam): Promise<ExamDetailDto> {
     const exam = this.examRepository.create({

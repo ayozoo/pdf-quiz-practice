@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PdfModule } from './pdf/pdf.module';
 import { ExamModule } from './exam/exam.module';
+import { TemplateModule } from './template/template.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ExamModule } from './exam/exam.module';
     }),
     PdfModule,
     ExamModule,
+    TemplateModule,
   ],
   controllers: [AppController],
   providers: [AppService],

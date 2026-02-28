@@ -1,98 +1,83 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Exam Web — Server
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+后端 NestJS 应用，负责 PDF 解析、试卷存储和模板管理。
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 技术栈
 
-## Description
+- **NestJS 11**（应用框架）
+- **TypeORM**（ORM）
+- **SQLite**（文件型数据库，零配置）
+- **pdf-parse**（PDF 文本提取）
+- **Multer**（文件上传）
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## 开发命令
 
 ```bash
-$ npm install
+npm install        # 安装依赖
+npm run start      # 启动服务（http://localhost:3000）
+npm run start:dev  # 开发模式（文件变更自动重启）
+npm run build      # 编译 TypeScript
+npm run lint       # ESLint 检查
+npm run test       # 单元测试
 ```
 
-## Compile and run the project
+## 模块结构
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```
+src/
+├── main.ts              # 入口（监听 0.0.0.0:3000，启用 CORS）
+├── app.module.ts        # 根模块
+├── exam/                # 试卷模块
+│   ├── exam.entity.ts   # Exam 实体
+│   ├── question.entity.ts # Question 实体
+│   ├── exam.service.ts  # 试卷 CRUD 逻辑
+│   ├── exam.controller.ts # REST 接口
+│   └── exam.module.ts
+├── pdf/                 # PDF 解析模块
+│   ├── pdf.service.ts   # 核心解析服务（读取模板正则 → 解析 PDF 文本）
+│   ├── pdf.controller.ts # 上传接口
+│   ├── pdf.types.ts     # 类型定义
+│   └── pdf.module.ts
+└── template/            # 解析模板模块
+    ├── template.entity.ts # PdfTemplate 实体（含所有正则配置字段）
+    ├── template.dto.ts    # DTO
+    ├── template.service.ts # 模板 CRUD + 内置模板初始化
+    ├── template.controller.ts # REST 接口
+    └── template.module.ts
 ```
 
-## Run tests
+## 核心 API
 
-```bash
-# unit tests
-$ npm run test
+### 试卷
 
-# e2e tests
-$ npm run test:e2e
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/exams` | 获取所有试卷列表 |
+| GET | `/exams/:id` | 获取试卷详情（含所有题目） |
+| DELETE | `/exams/:id` | 删除单个试卷 |
+| DELETE | `/exams` | 清空所有试卷 |
 
-# test coverage
-$ npm run test:cov
-```
+### PDF 解析
 
-## Deployment
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/pdf/upload` | 上传 PDF 文件（可选 `templateId` 参数指定解析模板） |
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### 解析模板
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/templates` | 获取所有模板 |
+| GET | `/templates/:id` | 获取单个模板 |
+| POST | `/templates` | 新建模板 |
+| PATCH | `/templates/:id` | 更新模板 |
+| DELETE | `/templates/:id` | 删除模板（内置模板不可删） |
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+## 解析流程
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+1. 接收上传的 PDF 文件及可选的 `templateId`
+2. 通过 `pdf-parse` 提取 PDF 纯文本
+3. 从数据库加载指定模板（或默认内置模板）的正则配置
+4. 按模板中的 `questionSplitPattern` 分割题目块
+5. 对每个题目块依次提取：题号、题干、选项、正确答案、解析、讨论区评论
+6. 将解析结果持久化到 SQLite 数据库

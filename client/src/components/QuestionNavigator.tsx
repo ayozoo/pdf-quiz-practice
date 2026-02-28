@@ -1,4 +1,3 @@
-import React from 'react';
 import { ChevronLeft } from 'lucide-react';
 
 interface QuestionNavigatorProps {
@@ -8,7 +7,6 @@ interface QuestionNavigatorProps {
   answerStatusMap: Record<number, 'correct' | 'wrong' | 'unsubmitted'>;
   onSelect: (index: number) => void;
   onBackToExamList: () => void;
-  gridColumns: number;
 }
 
 export function QuestionNavigator({
@@ -18,7 +16,6 @@ export function QuestionNavigator({
   answerStatusMap,
   onSelect,
   onBackToExamList,
-  gridColumns,
 }: QuestionNavigatorProps) {
   return (
     <div className="question-navigator">
@@ -28,20 +25,17 @@ export function QuestionNavigator({
           返回试卷列表
         </button>
       </div>
-      
+
       <div className="navigator-grid-wrapper">
-        <div 
-          className="navigator-grid"
-          style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
-        >
+        <div className="navigator-grid">
           {Array.from({ length: totalQuestions }).map((_, idx) => {
             const isSubmitted = submittedMap[idx];
             const isCurrent = idx === currentIndex;
             const status = answerStatusMap[idx] || 'unsubmitted';
-            
+
             let className = 'q-nav-item';
             if (isCurrent) className += ' current';
-            
+
             if (isSubmitted) {
               className += ' submitted';
               if (status === 'correct') className += ' correct';
