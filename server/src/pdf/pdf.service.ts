@@ -31,7 +31,7 @@ function isUploadedFile(value: unknown): value is UploadedFile {
 
 @Injectable()
 export class PdfService {
-  constructor(private readonly templateService: TemplateService) {}
+  constructor(private readonly templateService: TemplateService) { }
 
   /**
    * 解析 PDF 文件。
@@ -73,16 +73,89 @@ export class PdfService {
     filename: string,
     template: PdfTemplate,
   ): ParsedExam {
-    const normalized = rawText
-      .replace(/\r\n/g, '\n')
-      .replace(/\r/g, '\n')
+    // Step 1: 基础换行归一化
+    let text = rawText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+    // Step 2: 在题目分割标记前强制插入换行，防止 PDF 提取时合行导致漏切
+    const coreMarker = template.questionSplitPattern
+      .replace(/^\(\?[=!<]/g, '')
+      .replace(/\)$/g, '')
+      .replace(/^\^/, '')
+      .replace(/^\(\?:\^\|\\n\)/, '');
+    if (coreMarker.trim()) {
+      try {
+        const forceBreakRegex = new RegExp(`(${coreMarker})`, 'gi');
+        text = text.replace(forceBreakRegex, '\n$1');
+      } catch {
+        // 如果正则无效就跳过
+      }
+    }
+
+    // Step 3: 逐行清理 → 过滤空行
+    const allLines = text
       .split('\n')
       .map((line) => this.cleanLine(line))
-      .filter((line) => line.length > 0)
+      .filter((line) => line.length > 0);
+
+    // Step 4: 自动检测高频噪音行（页眉 / 页脚 / 水印等在 PDF 中反复出现的行）
+    //   原理：题目内容是唯一的，而页眉页脚在每页都重复 → 出现次数 ≥ 3 且非题目结构行 → 噪音
+    const lineFrequency = new Map<string, number>();
+    for (const line of allLines) {
+      const key = line.toLowerCase().trim();
+      if (key.length > 5) {
+        lineFrequency.set(key, (lineFrequency.get(key) || 0) + 1);
+      }
+    }
+
+    // 构建"需保护"的模版结构正则，防止误删答案行 / 选项行 / 题目头
+    // 注意：频率 key 是 lowercased，所以所有保护正则都需要 'i' 标志
+    const preservePatterns: RegExp[] = [];
+    try { preservePatterns.push(new RegExp(template.optionPattern, 'i')); } catch { /* skip */ }
+    try { preservePatterns.push(new RegExp(template.correctAnswerLinePattern, 'i')); } catch { /* skip */ }
+    try { preservePatterns.push(new RegExp(template.questionSplitPattern, 'im')); } catch { /* skip */ }
+
+    const NOISE_THRESHOLD = 3;
+    const autoNoiseLines = new Set<string>();
+    for (const [key, count] of lineFrequency) {
+      if (count >= NOISE_THRESHOLD) {
+        const shouldPreserve = preservePatterns.some((p) => p.test(key));
+        if (!shouldPreserve) {
+          autoNoiseLines.add(key);
+        }
+      }
+    }
+
+    if (autoNoiseLines.size > 0) {
+      console.log(`[PDF解析] 自动检测到 ${autoNoiseLines.size} 种噪音行:`);
+      for (const n of autoNoiseLines) {
+        console.log(`  × "${n}" (出现 ${lineFrequency.get(n)} 次)`);
+      }
+    }
+
+    // Step 5: 额外的模版级显式噪音规则（可选，作为补充）
+    const noiseRegexes: RegExp[] = [];
+    if (template.noiseLinePatterns) {
+      try {
+        const patterns = JSON.parse(template.noiseLinePatterns) as string[];
+        for (const p of patterns) {
+          try { noiseRegexes.push(new RegExp(p, 'i')); } catch { /* skip */ }
+        }
+      } catch { /* skip */ }
+    }
+
+    // Step 6: 过滤噪音 → 合并
+    const beforeNoiseCount = allLines.length;
+    const normalized = allLines
+      .filter((line) => !autoNoiseLines.has(line.toLowerCase().trim()))
+      .filter((line) => !noiseRegexes.some((r) => r.test(line)))
       .join('\n');
 
-    // 使用模版的 questionSplitPattern
-    const questionHeaderRegex = new RegExp(template.questionSplitPattern, 'gi');
+    console.log(`[PDF解析] 预处理: 总行数=${beforeNoiseCount} | 自动噪音种类=${autoNoiseLines.size} | 过滤后行数=${normalized.split('\n').length}`);
+    console.log(`[PDF解析] normalized前200字符: ${JSON.stringify(normalized.substring(0, 200))}`);
+
+    // 使用模版的 questionSplitPattern（加 m 标志使 ^ 匹配每行行首）
+    const questionHeaderRegex = new RegExp(template.questionSplitPattern, 'gim');
+    console.log(`[PDF解析] 分割正则: ${questionHeaderRegex.source} flags=${questionHeaderRegex.flags}`);
     const matches = Array.from(normalized.matchAll(questionHeaderRegex));
 
     const blocks: string[] = [];
@@ -108,11 +181,27 @@ export class PdfService {
     }
 
     const questions: ParsedQuestion[] = [];
+    const skippedBlocks: { index: number; firstLine: string; reason: string }[] = [];
 
-    for (const block of blocks) {
+    for (let bi = 0; bi < blocks.length; bi += 1) {
+      const block = blocks[bi];
       const parsed = this.tryParseQuestionBlock(block, template);
       if (parsed) {
         questions.push(parsed);
+      } else {
+        const firstLine = block.split('\n')[0]?.substring(0, 80) ?? '';
+        skippedBlocks.push({ index: bi, firstLine, reason: 'tryParseQuestionBlock returned null' });
+      }
+    }
+
+    // 调试日志：帮助排查丢题
+    console.log(
+      `[PDF解析] 文件=${filename} | 正则匹配=${matches.length}个 | 切块=${blocks.length}个 | 成功解析=${questions.length}个 | 跳过=${skippedBlocks.length}个`,
+    );
+    if (skippedBlocks.length > 0) {
+      console.log('[PDF解析] 跳过的块（前5个）:');
+      for (const s of skippedBlocks.slice(0, 5)) {
+        console.log(`  块#${s.index}: "${s.firstLine}" — ${s.reason}`);
       }
     }
 
@@ -168,15 +257,30 @@ export class PdfService {
 
     // 使用模版的 optionPattern 识别选项行
     const optionRegex = new RegExp(template.optionPattern);
-    const optionLines: { index: number; label: AnswerOptionLabel }[] = [];
+    const rawOptionLines: { index: number; label: AnswerOptionLabel }[] = [];
 
     for (let i = 0; i < qaLines.length; i += 1) {
       const line = qaLines[i];
       const optionMatch = line.match(optionRegex);
       if (optionMatch) {
         const label = optionMatch[1] as AnswerOptionLabel;
-        optionLines.push({ index: i, label });
+        rawOptionLines.push({ index: i, label });
       }
+    }
+
+    // 过滤：只保留从 A 开始连续递增的选项（A→B→C→D→E→F）
+    // PDF 长选项文本中的续行可能以 "B. Enable..." "D. Review..." 等开头，
+    // 会被误匹配为选项，但标签不连续，应归入上一个选项的文本。
+    const OPTION_SEQUENCE: AnswerOptionLabel[] = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const optionLines: { index: number; label: AnswerOptionLabel }[] = [];
+    let nextExpected = 0; // OPTION_SEQUENCE 中的索引
+
+    for (const opt of rawOptionLines) {
+      if (nextExpected < OPTION_SEQUENCE.length && opt.label === OPTION_SEQUENCE[nextExpected]) {
+        optionLines.push(opt);
+        nextExpected += 1;
+      }
+      // 否则跳过（视为上一个选项的续文）
     }
 
     if (optionLines.length === 0) {
@@ -294,12 +398,18 @@ export class PdfService {
   ): string | undefined {
     const joined = lines.join('\n');
 
-    // 使用模版的 explanationPattern
-    const primaryRegex = new RegExp(template.explanationPattern, 'is');
-    const fallbackRegex = /解析\s*[:-](.*)$/is;
+    // explanationPattern 可选，未配置则跳过主正则，仅尝试中文兜底
+    let explanationMatch: RegExpMatchArray | null = null;
 
-    const explanationMatch =
-      joined.match(primaryRegex) || joined.match(fallbackRegex);
+    if (template.explanationPattern) {
+      try {
+        explanationMatch = joined.match(new RegExp(template.explanationPattern, 'is'));
+      } catch { /* 跳过无效正则 */ }
+    }
+
+    if (!explanationMatch) {
+      explanationMatch = joined.match(/解析\s*[:-](.*)$/is);
+    }
 
     if (!explanationMatch) {
       return undefined;

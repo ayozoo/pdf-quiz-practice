@@ -43,9 +43,9 @@ export class PdfTemplate {
   @Column({ type: 'text' })
   correctAnswerExtractPattern: string;
 
-  /** 解析/解释提取正则（捕获组1=解释文本） */
-  @Column({ type: 'text' })
-  explanationPattern: string;
+  /** 解析/解释提取正则（捕获组1=解释文本，可选） */
+  @Column({ type: 'text', nullable: true })
+  explanationPattern?: string;
 
   /** 是否解析讨论区 */
   @Column({ default: false })
@@ -54,6 +54,10 @@ export class PdfTemplate {
   /** 讨论区日期锚点正则（可选，用于分割评论） */
   @Column({ type: 'text', nullable: true })
   discussionDatePattern?: string;
+
+  /** 噪音行过滤正则（JSON 数组，预处理时匹配到的行会被移除，如页眉页脚广告等） */
+  @Column({ type: 'text', nullable: true })
+  noiseLinePatterns?: string;
 
   @CreateDateColumn()
   createdAt: Date;

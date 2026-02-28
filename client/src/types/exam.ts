@@ -49,9 +49,10 @@ export interface PdfTemplateConfig {
   optionPattern: string;
   correctAnswerLinePattern: string;
   correctAnswerExtractPattern: string;
-  explanationPattern: string;
+  explanationPattern?: string;
   hasDiscussion: boolean;
   discussionDatePattern?: string;
+  noiseLinePatterns?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -69,5 +70,6 @@ export interface SuggestedPatterns {
   explanationPattern?: string;
   hasDiscussion?: boolean;
   discussionDatePattern?: string;
+  noiseLinePatterns?: string;
   hints?: Record<string, string>;
 }

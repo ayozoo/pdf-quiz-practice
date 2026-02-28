@@ -81,6 +81,12 @@ const FIELD_META: {
     placeholder:
       '(\\d+\\s+(?:year|month|week|day|hour)s?,\\s*)*\\d+\\s+(?:year|month|week|day|hour)s?\\s+ago',
   },
+  {
+    key: 'noiseLinePatterns',
+    label: '噪音行过滤',
+    desc: 'JSON 数组格式，每项为一个正则表达式。匹配到的行在预处理时被移除（如页眉页脚、广告水印等）。',
+    placeholder: '["^The Leader of IT Certification$","^Cert\\\\s?Leader","^100% Valid and Newest Version"]',
+  },
 ];
 
 export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
@@ -149,7 +155,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
       'optionPattern',
       'correctAnswerLinePattern',
       'correctAnswerExtractPattern',
-      'explanationPattern',
+      // explanationPattern 可选，有则解析，无则跳过
     ];
     for (const f of requiredFields) {
       if (!editForm[f]) {
@@ -172,6 +178,9 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
       }
       setCreating(false);
       setEditForm({});
+      setWizardStep('idle');
+      setSampleText('');
+      setWizardHints({});
       await loadTemplates();
     } catch (err) {
       setError(err instanceof Error ? err.message : '创建失败');
