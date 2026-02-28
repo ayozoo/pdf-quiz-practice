@@ -69,7 +69,6 @@ export class TemplateService implements OnModuleInit {
             }
             if (needUpdate) {
                 await this.templateRepo.save(existing);
-                console.log('[模版] 内置模版配置已同步更新');
             }
         }
     }
@@ -416,7 +415,6 @@ export class TemplateService implements OnModuleInit {
 
             return parsed;
         } catch (err) {
-            console.log("🚀 ~ TemplateService ~ aiGenerate ~ err:", err)
             if (err instanceof BadRequestException) throw err;
             throw new BadRequestException(
                 `AI 生成失败: ${err instanceof Error ? err.message : String(err)}`,

@@ -125,13 +125,6 @@ export class PdfService {
       }
     }
 
-    if (autoNoiseLines.size > 0) {
-      console.log(`[PDF解析] 自动检测到 ${autoNoiseLines.size} 种噪音行:`);
-      for (const n of autoNoiseLines) {
-        console.log(`  × "${n}" (出现 ${lineFrequency.get(n)} 次)`);
-      }
-    }
-
     // Step 5: 额外的模版级显式噪音规则（可选，作为补充）
     const noiseRegexes: RegExp[] = [];
     if (template.noiseLinePatterns) {
@@ -144,18 +137,13 @@ export class PdfService {
     }
 
     // Step 6: 过滤噪音 → 合并
-    const beforeNoiseCount = allLines.length;
     const normalized = allLines
       .filter((line) => !autoNoiseLines.has(line.toLowerCase().trim()))
       .filter((line) => !noiseRegexes.some((r) => r.test(line)))
       .join('\n');
 
-    console.log(`[PDF解析] 预处理: 总行数=${beforeNoiseCount} | 自动噪音种类=${autoNoiseLines.size} | 过滤后行数=${normalized.split('\n').length}`);
-    console.log(`[PDF解析] normalized前200字符: ${JSON.stringify(normalized.substring(0, 200))}`);
-
     // 使用模版的 questionSplitPattern（加 m 标志使 ^ 匹配每行行首）
     const questionHeaderRegex = new RegExp(template.questionSplitPattern, 'gim');
-    console.log(`[PDF解析] 分割正则: ${questionHeaderRegex.source} flags=${questionHeaderRegex.flags}`);
     const matches = Array.from(normalized.matchAll(questionHeaderRegex));
 
     const blocks: string[] = [];
@@ -181,27 +169,11 @@ export class PdfService {
     }
 
     const questions: ParsedQuestion[] = [];
-    const skippedBlocks: { index: number; firstLine: string; reason: string }[] = [];
 
-    for (let bi = 0; bi < blocks.length; bi += 1) {
-      const block = blocks[bi];
+    for (const block of blocks) {
       const parsed = this.tryParseQuestionBlock(block, template);
       if (parsed) {
         questions.push(parsed);
-      } else {
-        const firstLine = block.split('\n')[0]?.substring(0, 80) ?? '';
-        skippedBlocks.push({ index: bi, firstLine, reason: 'tryParseQuestionBlock returned null' });
-      }
-    }
-
-    // 调试日志：帮助排查丢题
-    console.log(
-      `[PDF解析] 文件=${filename} | 正则匹配=${matches.length}个 | 切块=${blocks.length}个 | 成功解析=${questions.length}个 | 跳过=${skippedBlocks.length}个`,
-    );
-    if (skippedBlocks.length > 0) {
-      console.log('[PDF解析] 跳过的块（前5个）:');
-      for (const s of skippedBlocks.slice(0, 5)) {
-        console.log(`  块#${s.index}: "${s.firstLine}" — ${s.reason}`);
       }
     }
 
