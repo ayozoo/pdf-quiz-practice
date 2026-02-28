@@ -1,4 +1,4 @@
-  {
+{
   "name": "exam-web",
   "version": "1.0.0",
   "description": "",
@@ -7,11 +7,17 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev:client": "npm run dev --prefix client",
     "dev:server": "npm run start --prefix server",
-    "start": "run-p dev:*"
+    "start": "run-p dev:*",
+    "format": "prettier --write \"client/src/**/*.{ts,tsx,css}\" \"server/src/**/*.ts\" \"./*.{json,md,yml}\" \".github/**/*.yml\"",
+    "format:check": "prettier --check \"client/src/**/*.{ts,tsx,css}\" \"server/src/**/*.ts\" \"./*.{json,md,yml}\" \".github/**/*.yml\"",
+    "prepare": "husky"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "npm-run-all": "^4.1.5"
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.4.2"
   }
 }

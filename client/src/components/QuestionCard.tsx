@@ -36,7 +36,7 @@ export function QuestionCard({
   useEffect(() => {
     // 只有当 isSubmitted 状态改变时才触发，避免不必要的重渲染
     // 并且我们只在变为 true 时自动展开，用户手动关闭后不会强制重新展开
-  }, [isSubmitted]); 
+  }, [isSubmitted]);
 
   // 当切题时(question变化)，重置状态
   useEffect(() => {
@@ -59,11 +59,11 @@ export function QuestionCard({
     if (!question) return;
 
     const optionsText = (question.options || [])
-      .map(opt => `${opt.label}. ${opt.text}`)
+      .map((opt) => `${opt.label}. ${opt.text}`)
       .join('\n');
-    
+
     const correctText = (question.correctAnswers || []).join(', ');
-    
+
     const textToCopy = `Question #${question.number ?? currentIndex + 1}
 ${question.text}
 
@@ -75,11 +75,11 @@ ${question.explanation ? `\nExplanation:\n${question.explanation}` : ''}`;
     // Fallback for non-secure contexts (e.g. HTTP on iOS)
     if (!navigator.clipboard || !window.isSecureContext) {
       try {
-        const textArea = document.createElement("textarea");
+        const textArea = document.createElement('textarea');
         textArea.value = textToCopy;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-9999px";
-        textArea.style.top = "0";
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
@@ -95,12 +95,15 @@ ${question.explanation ? `\nExplanation:\n${question.explanation}` : ''}`;
       }
     }
 
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }).catch(err => {
-      console.error('Failed to copy text: ', err);
-    });
+    navigator.clipboard
+      .writeText(textToCopy)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch((err) => {
+        console.error('Failed to copy text: ', err);
+      });
   };
 
   if (!question) {
@@ -113,21 +116,19 @@ ${question.explanation ? `\nExplanation:\n${question.explanation}` : ''}`;
   return (
     <div className="question-card">
       <div className="question-header">
-        <span className="question-number">
-          Question #{question.number ?? currentIndex + 1}
-        </span>
+        <span className="question-number">Question #{question.number ?? currentIndex + 1}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button 
+          <button
             onClick={handleCopyQuestion}
             className="btn-nav"
-            style={{ 
-              padding: '4px 8px', 
-              fontSize: '0.8rem', 
-              display: 'flex', 
-              alignItems: 'center', 
+            style={{
+              padding: '4px 8px',
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
               gap: '4px',
               color: copied ? 'var(--success-color)' : 'inherit',
-              borderColor: copied ? 'var(--success-color)' : 'var(--border-color)'
+              borderColor: copied ? 'var(--success-color)' : 'var(--border-color)',
             }}
             title="复制题目和答案"
           >
@@ -147,14 +148,14 @@ ${question.explanation ? `\nExplanation:\n${question.explanation}` : ''}`;
           {options.map((opt) => {
             const isSelected = selectedOptions.includes(opt.label);
             const isCorrect = correctAnswers.includes(opt.label);
-            
+
             // 样式逻辑：
             // 1. 如果显示答案(showAnswer):
             //    - 正确选项 -> correct (绿)
             //    - 选中但错误 -> wrong (红) (可选，用户没要求，但通常刷题网站会有)
             // 2. 如果没显示答案:
             //    - 选中 -> selected (蓝/灰)
-            
+
             let className = 'option-item';
             if (showAnswer) {
               if (isCorrect) className += ' correct';
@@ -182,7 +183,11 @@ ${question.explanation ? `\nExplanation:\n${question.explanation}` : ''}`;
           <button onClick={onPrev} disabled={currentIndex === 0} className="btn-nav">
             上一题
           </button>
-          <button onClick={onNext} disabled={currentIndex === totalQuestions - 1} className="btn-nav">
+          <button
+            onClick={onNext}
+            disabled={currentIndex === totalQuestions - 1}
+            className="btn-nav"
+          >
             下一题
           </button>
         </div>
@@ -228,7 +233,7 @@ ${question.explanation ? `\nExplanation:\n${question.explanation}` : ''}`;
                         <span className="dot-separator">•</span>
                         <span className="comment-date">{comment.date}</span>
                       </div>
-                      
+
                       {(comment.isHighlyVoted || comment.isMostRecent) && (
                         <div className="header-badges-row">
                           {comment.isHighlyVoted && (
@@ -247,15 +252,17 @@ ${question.explanation ? `\nExplanation:\n${question.explanation}` : ''}`;
 
                     {comment.selectedAnswer && (
                       <div className="comment-selected-answer">
-                        <span className="label">Selected Answer:</span> <strong>{comment.selectedAnswer}</strong>
+                        <span className="label">Selected Answer:</span>{' '}
+                        <strong>{comment.selectedAnswer}</strong>
                       </div>
                     )}
-                    
+
                     <div className="comment-content">{comment.content}</div>
-                    
+
                     {comment.voteCount !== undefined && (
                       <div className="comment-votes">
-                        <ThumbsUp size={14} style={{ marginRight: 4 }} /> upvoted {comment.voteCount} times
+                        <ThumbsUp size={14} style={{ marginRight: 4 }} /> upvoted{' '}
+                        {comment.voteCount} times
                       </div>
                     )}
                   </div>

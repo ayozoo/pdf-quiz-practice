@@ -29,18 +29,18 @@ export function ExamListSidebar({
       const data = JSON.parse(saved);
       // Count questions that are either submitted OR have selected options
       const submittedIds = Object.keys(data.submittedMap || {});
-      const selectedIds = Object.keys(data.selectedOptions || {}).filter(k => {
+      const selectedIds = Object.keys(data.selectedOptions || {}).filter((k) => {
         const val = data.selectedOptions[k];
         return Array.isArray(val) && val.length > 0;
       });
-      
+
       // Use Set to get unique count
       const uniqueDone = new Set([...submittedIds, ...selectedIds]);
       const doneCount = uniqueDone.size;
-      
+
       return {
         count: doneCount,
-        percent: Math.round((doneCount / totalQuestions) * 100)
+        percent: Math.round((doneCount / totalQuestions) * 100),
       };
     } catch {
       return null;
@@ -75,20 +75,24 @@ export function ExamListSidebar({
                   )}
                 </div>
                 {progress && progress.count > 0 && (
-                  <div style={{ 
-                    marginTop: '4px', 
-                    width: '100%', 
-                    height: '4px', 
-                    background: '#e5e7eb', 
-                    borderRadius: '2px',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      width: `${progress.percent}%`,
-                      height: '100%',
-                      background: 'var(--primary-color)',
-                      transition: 'width 0.3s ease'
-                    }} />
+                  <div
+                    style={{
+                      marginTop: '4px',
+                      width: '100%',
+                      height: '4px',
+                      background: '#e5e7eb',
+                      borderRadius: '2px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${progress.percent}%`,
+                        height: '100%',
+                        background: 'var(--primary-color)',
+                        transition: 'width 0.3s ease',
+                      }}
+                    />
                   </div>
                 )}
               </div>

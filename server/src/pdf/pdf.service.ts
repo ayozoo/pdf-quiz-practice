@@ -7,6 +7,8 @@ import {
   ParsedExam,
   ParsedQuestion,
 } from './pdf.types';
+import { TemplateService } from '../template/template.service';
+import { PdfTemplate } from '../template/template.entity';
 
 type UploadedFile = {
   buffer: Buffer;
@@ -21,18 +23,26 @@ function isUploadedFile(value: unknown): value is UploadedFile {
     buffer?: unknown;
     originalname?: unknown;
   };
-  return (
-    candidate.buffer instanceof Buffer &&
-    typeof candidate.originalname === 'string'
-  );
+  return candidate.buffer instanceof Buffer && typeof candidate.originalname === 'string';
 }
 
 @Injectable()
 export class PdfService {
-  async parsePdf(file: unknown): Promise<ParsedExam> {
+  constructor(private readonly templateService: TemplateService) {}
+
+  /**
+   * 解析 PDF 文件。
+   * @param file       上传的文件对象
+   * @param templateId 可选，指定模版 ID；不传则使用内置默认模版
+   */
+  async parsePdf(file: unknown, templateId?: number): Promise<ParsedExam> {
     if (!isUploadedFile(file)) {
       throw new BadRequestException('文件为空');
     }
+
+    const template = templateId
+      ? await this.templateService.findOne(templateId)
+      : await this.templateService.findDefault();
 
     type PdfParseResult = { text?: string };
     type PdfParseFn = (data: Buffer) => Promise<PdfParseResult>;
@@ -45,24 +55,106 @@ export class PdfService {
       throw new BadRequestException('未能从 PDF 中提取到文字内容');
     }
 
-    return this.parseExamText(text, file.originalname);
+    return this.parseExamText(text, file.originalname, template);
   }
 
-  private parseExamText(rawText: string, filename: string): ParsedExam {
-    const normalized = rawText
-      .replace(/\r\n/g, '\n')
-      .replace(/\r/g, '\n')
+  /**
+   * 预览解析结果（不入库），用于模版调试。
+   */
+  async previewParse(file: unknown, templateId?: number): Promise<ParsedExam> {
+    return this.parsePdf(file, templateId);
+  }
+
+  private parseExamText(rawText: string, filename: string, template: PdfTemplate): ParsedExam {
+    // Step 1: 基础换行归一化
+    let text = rawText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+    // Step 2: 在题目分割标记前强制插入换行，防止 PDF 提取时合行导致漏切
+    const coreMarker = template.questionSplitPattern
+      .replace(/^\(\?[=!<]/g, '')
+      .replace(/\)$/g, '')
+      .replace(/^\^/, '')
+      .replace(/^\(\?:\^\|\\n\)/, '');
+    if (coreMarker.trim()) {
+      try {
+        const forceBreakRegex = new RegExp(`(${coreMarker})`, 'gi');
+        text = text.replace(forceBreakRegex, '\n$1');
+      } catch {
+        // 如果正则无效就跳过
+      }
+    }
+
+    // Step 3: 逐行清理 → 过滤空行
+    const allLines = text
       .split('\n')
       .map((line) => this.cleanLine(line))
-      .filter((line) => line.length > 0)
+      .filter((line) => line.length > 0);
+
+    // Step 4: 自动检测高频噪音行（页眉 / 页脚 / 水印等在 PDF 中反复出现的行）
+    //   原理：题目内容是唯一的，而页眉页脚在每页都重复 → 出现次数 ≥ 3 且非题目结构行 → 噪音
+    const lineFrequency = new Map<string, number>();
+    for (const line of allLines) {
+      const key = line.toLowerCase().trim();
+      if (key.length > 5) {
+        lineFrequency.set(key, (lineFrequency.get(key) || 0) + 1);
+      }
+    }
+
+    // 构建"需保护"的模版结构正则，防止误删答案行 / 选项行 / 题目头
+    // 注意：频率 key 是 lowercased，所以所有保护正则都需要 'i' 标志
+    const preservePatterns: RegExp[] = [];
+    try {
+      preservePatterns.push(new RegExp(template.optionPattern, 'i'));
+    } catch {
+      /* skip */
+    }
+    try {
+      preservePatterns.push(new RegExp(template.correctAnswerLinePattern, 'i'));
+    } catch {
+      /* skip */
+    }
+    try {
+      preservePatterns.push(new RegExp(template.questionSplitPattern, 'im'));
+    } catch {
+      /* skip */
+    }
+
+    const NOISE_THRESHOLD = 3;
+    const autoNoiseLines = new Set<string>();
+    for (const [key, count] of lineFrequency) {
+      if (count >= NOISE_THRESHOLD) {
+        const shouldPreserve = preservePatterns.some((p) => p.test(key));
+        if (!shouldPreserve) {
+          autoNoiseLines.add(key);
+        }
+      }
+    }
+
+    // Step 5: 额外的模版级显式噪音规则（可选，作为补充）
+    const noiseRegexes: RegExp[] = [];
+    if (template.noiseLinePatterns) {
+      try {
+        const patterns = JSON.parse(template.noiseLinePatterns) as string[];
+        for (const p of patterns) {
+          try {
+            noiseRegexes.push(new RegExp(p, 'i'));
+          } catch {
+            /* skip */
+          }
+        }
+      } catch {
+        /* skip */
+      }
+    }
+
+    // Step 6: 过滤噪音 → 合并
+    const normalized = allLines
+      .filter((line) => !autoNoiseLines.has(line.toLowerCase().trim()))
+      .filter((line) => !noiseRegexes.some((r) => r.test(line)))
       .join('\n');
 
-    // 既支持标准的 "Question #123" 行首
-    // 也支持粘连的 "Topic 1Question #123"
-    // 也支持没有井号的 "Question 123"
-    // 关键是：(Topic ...)? Question ...
-    const questionHeaderRegex =
-      /(?:^|\n)(?:Topic\s+\d+\s*)?Question\s*#?(\d+)/gi;
+    // 使用模版的 questionSplitPattern（加 m 标志使 ^ 匹配每行行首）
+    const questionHeaderRegex = new RegExp(template.questionSplitPattern, 'gim');
     const matches = Array.from(normalized.matchAll(questionHeaderRegex));
 
     const blocks: string[] = [];
@@ -71,9 +163,7 @@ export class PdfService {
       for (let i = 0; i < matches.length; i += 1) {
         const start = matches[i].index ?? 0;
         const end =
-          i + 1 < matches.length
-            ? (matches[i + 1].index ?? normalized.length)
-            : normalized.length;
+          i + 1 < matches.length ? (matches[i + 1].index ?? normalized.length) : normalized.length;
         const block = normalized.slice(start, end).trim();
         if (block.length > 0) {
           blocks.push(block);
@@ -90,7 +180,7 @@ export class PdfService {
     const questions: ParsedQuestion[] = [];
 
     for (const block of blocks) {
-      const parsed = this.tryParseQuestionBlock(block);
+      const parsed = this.tryParseQuestionBlock(block, template);
       if (parsed) {
         questions.push(parsed);
       }
@@ -104,7 +194,7 @@ export class PdfService {
     };
   }
 
-  private tryParseQuestionBlock(block: string): ParsedQuestion | null {
+  private tryParseQuestionBlock(block: string, template: PdfTemplate): ParsedQuestion | null {
     const lines = block
       .split('\n')
       .map((l) => l.trim())
@@ -114,26 +204,23 @@ export class PdfService {
       return null;
     }
 
-    const correctLineIndex = lines.findIndex((line) =>
-      /Correct\s*Answer[s]?\s*[:：]/i.test(line),
-    );
+    // 使用模版的 correctAnswerLinePattern 定位正确答案行
+    const correctLineRegex = new RegExp(template.correctAnswerLinePattern, 'i');
+    const correctLineIndex = lines.findIndex((line) => correctLineRegex.test(line));
 
-    const qaLines =
-      correctLineIndex === -1 ? lines : lines.slice(0, correctLineIndex);
+    const qaLines = correctLineIndex === -1 ? lines : lines.slice(0, correctLineIndex);
 
     if (qaLines.length === 0) {
       return null;
     }
 
-    const discussionLines =
-      correctLineIndex === -1 ? [] : lines.slice(correctLineIndex + 1);
+    const discussionLines = correctLineIndex === -1 ? [] : lines.slice(correctLineIndex + 1);
 
     const firstLine = qaLines[0];
 
-    // 匹配 "Question #123 ..." 或者 "Topic 1Question #123 ..."
-    const questionHeaderMatch = firstLine.match(
-      /(?:Topic\s+\d+\s*)?Question\s*#?(\d+)\s*[:.)-]?\s*(.*)$/i,
-    );
+    // 使用模版的 questionNumberPattern 提取题号
+    const questionNumberRegex = new RegExp(template.questionNumberPattern, 'i');
+    const questionHeaderMatch = firstLine.match(questionNumberRegex);
     const numberedLineMatch = firstLine.match(/^(\d+)[).:\s]+(.*)$/);
 
     const number = questionHeaderMatch
@@ -142,16 +229,32 @@ export class PdfService {
         ? parseInt(numberedLineMatch[1], 10)
         : null;
 
-    const optionLines: { index: number; label: AnswerOptionLabel }[] = [];
+    // 使用模版的 optionPattern 识别选项行
+    const optionRegex = new RegExp(template.optionPattern);
+    const rawOptionLines: { index: number; label: AnswerOptionLabel }[] = [];
 
     for (let i = 0; i < qaLines.length; i += 1) {
       const line = qaLines[i];
-      // 必须带标点 (. ) :) 避免把 "A company..." 误判为选项 A
-      const optionMatch = line.match(/^([A-F])[).:]\s+/);
+      const optionMatch = line.match(optionRegex);
       if (optionMatch) {
         const label = optionMatch[1] as AnswerOptionLabel;
-        optionLines.push({ index: i, label });
+        rawOptionLines.push({ index: i, label });
       }
+    }
+
+    // 过滤：只保留从 A 开始连续递增的选项（A→B→C→D→E→F）
+    // PDF 长选项文本中的续行可能以 "B. Enable..." "D. Review..." 等开头，
+    // 会被误匹配为选项，但标签不连续，应归入上一个选项的文本。
+    const OPTION_SEQUENCE: AnswerOptionLabel[] = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const optionLines: { index: number; label: AnswerOptionLabel }[] = [];
+    let nextExpected = 0; // OPTION_SEQUENCE 中的索引
+
+    for (const opt of rawOptionLines) {
+      if (nextExpected < OPTION_SEQUENCE.length && opt.label === OPTION_SEQUENCE[nextExpected]) {
+        optionLines.push(opt);
+        nextExpected += 1;
+      }
+      // 否则跳过（视为上一个选项的续文）
     }
 
     if (optionLines.length === 0) {
@@ -168,9 +271,7 @@ export class PdfService {
         questionTextLines.push(rest);
       }
       if (firstOptionIndex > 1) {
-        questionTextLines = questionTextLines.concat(
-          qaLines.slice(1, firstOptionIndex),
-        );
+        questionTextLines = questionTextLines.concat(qaLines.slice(1, firstOptionIndex));
       }
     } else if (numberedLineMatch) {
       const rest = numberedLineMatch[2] ? numberedLineMatch[2].trim() : '';
@@ -178,9 +279,7 @@ export class PdfService {
         questionTextLines.push(rest);
       }
       if (firstOptionIndex > 1) {
-        questionTextLines = questionTextLines.concat(
-          qaLines.slice(1, firstOptionIndex),
-        );
+        questionTextLines = questionTextLines.concat(qaLines.slice(1, firstOptionIndex));
       }
     } else {
       questionTextLines = qaLines.slice(0, firstOptionIndex);
@@ -196,7 +295,7 @@ export class PdfService {
 
       const optionTextLines = qaLines.slice(start, end);
       const firstOptionLine = optionTextLines[0];
-      const labelPrefixMatch = firstOptionLine.match(/^([A-F])[).:]\s+/);
+      const labelPrefixMatch = firstOptionLine.match(optionRegex);
       const firstTextPart = labelPrefixMatch
         ? firstOptionLine.slice(labelPrefixMatch[0].length).trim()
         : firstOptionLine;
@@ -210,17 +309,18 @@ export class PdfService {
       });
     }
 
-    const correctAnswers = this.extractCorrectAnswers(lines);
-    const explanation = this.extractExplanation(lines);
+    const correctAnswers = this.extractCorrectAnswers(lines, template);
+    const explanation = this.extractExplanation(lines, template);
 
-    const discussion =
-      discussionLines.length > 0
-        ? this.cleanDiscussion(discussionLines.join('\n').trim()) || undefined
-        : undefined;
+    let discussion: string | undefined;
+    let comments: DiscussionComment[] | undefined;
 
-    const comments = discussion
-      ? this.parseDiscussionComments(discussion)
-      : undefined;
+    if (template.hasDiscussion && discussionLines.length > 0) {
+      discussion = this.cleanDiscussion(discussionLines.join('\n').trim()) || undefined;
+      if (discussion && template.discussionDatePattern) {
+        comments = this.parseDiscussionComments(discussion, template.discussionDatePattern);
+      }
+    }
 
     return {
       number,
@@ -233,16 +333,14 @@ export class PdfService {
     };
   }
 
-  private extractCorrectAnswers(lines: string[]): AnswerOptionLabel[] {
+  private extractCorrectAnswers(lines: string[], template: PdfTemplate): AnswerOptionLabel[] {
     const joined = lines.join(' ');
 
-    // 支持 "Correct Answer: C"
-    // 支持 "Correct Answer: AC" (连写)
-    // 支持 "Correct Answers: A, C" (逗号分隔)
-    // 宽泛匹配：冒号后面跟一串 A-F 的字符（允许空格和逗号）
-    const match =
-      joined.match(/Correct\s*Answer[s]?\s*[:-]\s*([A-F,\s]+)/i) ||
-      joined.match(/Answer[s]?\s*[:-]\s*([A-F,\s]+)/i);
+    // 使用模版的 correctAnswerExtractPattern
+    const primaryRegex = new RegExp(template.correctAnswerExtractPattern, 'i');
+    const fallbackRegex = /Answer[s]?\s*[:-]\s*([A-F,\s]+)/i;
+
+    const match = joined.match(primaryRegex) || joined.match(fallbackRegex);
 
     if (!match) {
       return [];
@@ -257,12 +355,23 @@ export class PdfService {
     return cleaned.split('') as AnswerOptionLabel[];
   }
 
-  private extractExplanation(lines: string[]): string | undefined {
+  private extractExplanation(lines: string[], template: PdfTemplate): string | undefined {
     const joined = lines.join('\n');
 
-    const explanationMatch =
-      joined.match(/Explanation\s*[:-](.*)$/is) ||
-      joined.match(/解析\s*[:-](.*)$/is);
+    // explanationPattern 可选，未配置则跳过主正则，仅尝试中文兜底
+    let explanationMatch: RegExpMatchArray | null = null;
+
+    if (template.explanationPattern) {
+      try {
+        explanationMatch = joined.match(new RegExp(template.explanationPattern, 'is'));
+      } catch {
+        /* 跳过无效正则 */
+      }
+    }
+
+    if (!explanationMatch) {
+      explanationMatch = joined.match(/解析\s*[:-](.*)$/is);
+    }
 
     if (!explanationMatch) {
       return undefined;
@@ -306,19 +415,15 @@ export class PdfService {
       .trim();
   }
 
-  private parseDiscussionComments(discussionText: string): DiscussionComment[] {
-    // 采用“日期锚点”策略
-    // 1. 扫描每一行，寻找包含 "time ago" 的行。
-    // 2. 允许行内包含 User/Badge (如果它们没被分行)。
-    // 3. 允许行尾匹配。
-
+  private parseDiscussionComments(
+    discussionText: string,
+    datePatternStr: string,
+  ): DiscussionComment[] {
     const comments: DiscussionComment[] = [];
     const lines = discussionText.split('\n').map((l) => l.trim());
 
-    // 匹配时间的正则，极度放宽
-    // 只要包含 "数字 + 单位 + ago" 即可，忽略前后字符
-    const looseDateRegex =
-      /(\d+\s+(?:year|month|week|day|hour)s?,\s*)*\d+\s+(?:year|month|week|day|hour)s?\s+ago/i;
+    // 使用模版的 discussionDatePattern
+    const looseDateRegex = new RegExp(datePatternStr, 'i');
 
     let contentBuffer: string[] = [];
     let currentComment: Partial<DiscussionComment> | null = null;
@@ -363,10 +468,7 @@ export class PdfService {
           if (contentBuffer.length > 0) {
             const lastLine = contentBuffer[contentBuffer.length - 1];
 
-            if (
-              lastLine.includes('Highly Voted') ||
-              lastLine.includes('Most Recent')
-            ) {
+            if (lastLine.includes('Highly Voted') || lastLine.includes('Most Recent')) {
               if (lastLine.includes('Highly Voted')) isHighlyVoted = true;
               if (lastLine.includes('Most Recent')) isMostRecent = true;
               contentBuffer.pop(); // 消耗 Badge 行
@@ -403,14 +505,10 @@ export class PdfService {
           let content = contentBuffer.join('\n').trim();
 
           // 提取 Selected Answer
-          const selectedMatch = content.match(
-            /Selected Answer:\s*([A-F,\s]+)/i,
-          );
+          const selectedMatch = content.match(/Selected Answer:\s*([A-F,\s]+)/i);
           if (selectedMatch) {
             currentComment.selectedAnswer = selectedMatch[1].trim();
-            content = content
-              .replace(/Selected Answer:\s*[A-F,\s]+/i, '')
-              .trim();
+            content = content.replace(/Selected Answer:\s*[A-F,\s]+/i, '').trim();
           }
 
           // 提取 Vote Count
