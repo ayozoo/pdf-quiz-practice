@@ -1,110 +1,108 @@
-# pdf-quiz-practice — 通用 PDF 题库刷题平台 🚀
+# pdf-quiz-practice 🚀
 
-> **Upload any PDF exam → auto-parse → practice online**
-> 上传任意 PDF 题库，自动解析，随时随地刷题。
+**English** | [中文](./README.zh-CN.md)
 
-一个**轻量、开源、零登录**的在线刷题 Web 应用。支持**任意格式的 PDF 题库**，通过可配置的正则模板引擎自动提取题目、选项与答案，进度自动保存到本地。
+> Upload any PDF exam book → auto-parse questions & answers → practice online.
 
-> **💡 不只是 AWS 认证！** 内置 AWS SAA / SOA 格式模板，同时支持自定义模板适配**任何文本型 PDF** —— 考研、考公、驾照、职业资格、企业内训，统统搞定。
+A **lightweight, open-source, zero-login** web app for exam practice. Supports **any text-based PDF** through a configurable regex template engine — automatically extracts questions, options, and answers. Progress is saved locally in the browser.
 
-**关键词 / Keywords**：PDF exam practice · quiz web app · PDF question bank parser · AWS certification practice · 刷题软件 · PDF 题库解析 · 在线做题 · React NestJS
+> **💡 Not just AWS!** Ships with a built-in AWS SAA / SOA template, and lets you create custom templates for any format — civil service exams, driving tests, graduate entrance exams, professional certifications, corporate training, and more.
 
-## ✨ 核心亮点
+## ✨ Features
 
-- **🧩 模板化解析引擎**
-  - 不再绑死某一种 PDF 格式。通过**可配置的正则模板**，自由定义题目分割、选项识别、答案提取等规则。
-  - 内置 AWS SAA 模板开箱即用；支持新建、复制、编辑自定义模板。
-  - 上传 PDF 时可选择对应的解析模板，一键解析入库。
+- **🧩 Template-based parsing engine**
+  - Not tied to a single PDF format. Configure regex rules to define question splitting, option detection, and answer extraction.
+  - Built-in AWS SAA template works out of the box. Create, clone, or edit your own templates.
+  - Choose a template when uploading — one click to parse and store.
 
-- **📱 手机电脑无缝切换**
-  - **电脑端**：三栏布局 —— 左侧导航 + 试卷列表 + 答题区，侧栏宽度可拖拽调节。
-  - **手机端**：自适应移动布局，抽屉式菜单、大字体触控友好，单手刷题无压力。
+- **📱 Desktop & mobile ready**
+  - **Desktop**: 3-column layout — sidebar nav + exam list + answer area, with draggable panel widths.
+  - **Mobile**: Responsive layout with drawer menu, large touch targets, and single-hand friendly design.
 
-- **💾 进度自动保存**
-  - 无需登录注册。选项选择、翻页位置自动存入浏览器 LocalStorage。
-  - 题号导航面板实时显示做题状态：当前题 / 正确 / 错误 / 未做，一目了然。
+- **💾 Auto-saved progress**
+  - No login required. Answers and page position are automatically persisted to browser LocalStorage.
+  - Question navigator panel shows real-time status: current / correct / wrong / unanswered.
 
-- **🔌 局域网即刻访问**
-  - 前后端均监听 `0.0.0.0`，手机与电脑连同一 WiFi 输入电脑 IP 即可使用。
-  - 自动推断 API 地址，零配置跨设备访问。
+- **🔌 LAN access out of the box**
+  - Both frontend and backend listen on `0.0.0.0`. Connect phone and PC to the same Wi-Fi and open the PC's IP.
+  - API base URL is auto-detected — zero config for cross-device access.
 
-## 📸 功能页面
+## 📸 Pages
 
-| 页面         | 说明                                                  |
-| ------------ | ----------------------------------------------------- |
-| **刷题练习** | 选择试卷 → 逐题作答 → 提交查看正确答案与解析          |
-| **题库管理** | 上传 PDF（可选模板）/ 删除单科 / 清空全部             |
-| **模板配置** | 新建 / 编辑 / 复制 / 删除解析模板，可视化配置正则规则 |
+| Page                | Description                                                         |
+| ------------------- | ------------------------------------------------------------------- |
+| **Practice**        | Select an exam → answer questions → submit to see correct answers   |
+| **Manage**          | Upload PDF (choose template) / delete individual exam / clear all   |
+| **Template Config** | Create / edit / clone / delete parsing templates with regex preview |
 
-## 🛠️ 快速开始
+## 🛠️ Quick Start
 
-**前提**：Node.js v18+
+**Prerequisites**: Node.js v18+
 
-### 1. 安装依赖
+### 1. Install dependencies
 
 ```bash
-cd exam-web
-npm install          # 根目录安装 npm-run-all
+git clone https://github.com/ayozoo/pdf-quiz-practice.git
+cd pdf-quiz-practice
+npm install
 cd client && npm install && cd ..
 cd server && npm install && cd ..
 ```
 
-### 2. 启动服务
+### 2. Start
 
 ```bash
-npm start            # 前后端同时启动
+npm start            # starts frontend and backend in parallel
 ```
 
-- **前端**：`http://localhost:5173`
-- **后端 API**：`http://localhost:3000`
+- **Frontend**: `http://localhost:5173`
+- **Backend API**: `http://localhost:3000`
 
-### 3. 手机访问
+### 3. Mobile access
 
-1. 手机与电脑连接同一 WiFi。
-2. 查看电脑局域网 IP（Mac: `ifconfig` / Windows: `ipconfig`，找 `192.168.x.x`）。
-3. 手机浏览器打开 `http://<电脑IP>:5173`。
+1. Connect your phone and PC to the same Wi-Fi.
+2. Find the PC's LAN IP (Mac: `ifconfig` / Windows: `ipconfig`, e.g. `192.168.x.x`).
+3. Open `http://<PC-IP>:5173` in the phone's browser.
 
-## 📖 使用流程
+## 📖 Usage
 
-1. 进入 **「模板」** 页面，确认已有适合你题库格式的解析模板（内置 AWS 模板可直接用）。如果是新格式，新建模板并配置正则规则。
-2. 进入 **「管理」** 页面，选择模板 → 上传 PDF 文件 → 自动解析入库。
-3. 进入 **「刷题」** 页面，选择试卷开始答题。做题进度自动保存。
+1. Go to **Templates** — confirm there is a template matching your PDF format (the built-in AWS template works for AWS exam PDFs). If not, create a new one and configure the regex rules.
+2. Go to **Manage** — select a template, upload your PDF file, and it will be automatically parsed and stored.
+3. Go to **Practice** — pick an exam and start answering. Progress is saved automatically.
 
-## ⚠️ 注意事项
+## ⚠️ Notes
 
-1. **进度存储**：进度保存在当前浏览器 LocalStorage 中，不同设备/浏览器之间**互相独立**。
-2. **PDF 格式要求**：PDF 必须是**文本型**（可复制文字的）。扫描版图片 PDF 无法解析。
-3. **模板适配**：如果解析结果不理想，请在模板配置页面调整正则规则，或新建一套模板。
+1. **Progress storage**: Saved in the current browser's LocalStorage. Different devices / browsers have independent progress.
+2. **PDF requirement**: The PDF must be **text-based** (copyable text). Scanned image PDFs cannot be parsed.
+3. **Template tuning**: If parse results are off, adjust the regex rules in the Template Config page or create a new template.
 
-## 🧑‍💻 技术栈
+## 🧑‍💻 Tech Stack
 
-| 层         | 技术                                                           |
-| ---------- | -------------------------------------------------------------- |
-| **前端**   | React 19 · TypeScript · Vite 5 · React Router 7 · Lucide Icons |
-| **后端**   | NestJS 11 · TypeORM · pdf-parse                                |
-| **数据库** | SQLite（文件型，零安装）                                       |
-| **工程化** | Monorepo · npm-run-all 并行启动                                |
+| Layer        | Technologies                                                     |
+| ------------ | ---------------------------------------------------------------- |
+| **Frontend** | React 19 · TypeScript · Vite 5 · React Router 7 · Lucide Icons   |
+| **Backend**  | NestJS 11 · TypeORM · pdf-parse                                  |
+| **Database** | SQLite (file-based, zero installation)                           |
+| **Tooling**  | Monorepo · npm-run-all · Husky · lint-staged · Prettier · ESLint |
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 pdf-quiz-practice/
-├── package.json          # 根级脚本（npm start 同时启动前后端）
-├── client/               # 前端 React 应用
-│   ├── src/
-│   │   ├── components/   # 通用组件（Layout、QuestionCard、QuestionNavigator…）
-│   │   ├── pages/        # 页面（ExamPractice、ExamManagement、TemplateConfig）
-│   │   ├── types/        # TypeScript 类型定义
-│   │   └── utils/        # 工具函数
-│   └── vite.config.ts
-├── server/               # 后端 NestJS 应用
+├── package.json          # root scripts (npm start launches both services)
+├── client/               # React frontend
 │   └── src/
-│       ├── exam/         # 试卷 CRUD
-│       ├── pdf/          # PDF 上传与解析
-│       └── template/     # 解析模板 CRUD
-└── docs/                 # 文档
+│       ├── components/   # Layout, QuestionCard, QuestionNavigator, …
+│       ├── pages/        # ExamPractice, ExamManagement, TemplateConfig
+│       ├── types/        # TypeScript type definitions
+│       └── utils/        # API helpers
+└── server/               # NestJS backend
+    └── src/
+        ├── exam/         # Exam CRUD
+        ├── pdf/          # PDF upload & parsing
+        └── template/     # Template CRUD
 ```
 
----
+## 📄 License
 
-_祝你逢考必过！💯_
+[MIT](./LICENSE)
