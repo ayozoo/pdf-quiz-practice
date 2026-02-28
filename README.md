@@ -1,8 +1,13 @@
-# Exam Web — 万能刷题神器 🚀
+# pdf-quiz-practice — 通用 PDF 题库刷题平台 🚀
 
-一个**轻量、好用、随地刷**的在线刷题平台。上传 PDF 题库，自动解析，随时随地开刷。
+> **Upload any PDF exam → auto-parse → practice online**
+> 上传任意 PDF 题库，自动解析，随时随地刷题。
 
-> **💡 支持任意格式的 PDF 题库！** 内置 AWS 认证考试题库模板，同时提供**可视化模板配置引擎**，你可以自定义正则规则来解析任何格式的试题 PDF —— 驾照、考研、考公、内部培训，统统搞定。
+一个**轻量、开源、零登录**的在线刷题 Web 应用。支持**任意格式的 PDF 题库**，通过可配置的正则模板引擎自动提取题目、选项与答案，进度自动保存到本地。
+
+> **💡 不只是 AWS 认证！** 内置 AWS SAA / SOA 格式模板，同时支持自定义模板适配**任何文本型 PDF** —— 考研、考公、驾照、职业资格、企业内训，统统搞定。
+
+**关键词 / Keywords**：PDF exam practice · quiz web app · PDF question bank parser · AWS certification practice · 刷题软件 · PDF 题库解析 · 在线做题 · React NestJS
 
 ## ✨ 核心亮点
 
@@ -83,7 +88,7 @@ npm start            # 前后端同时启动
 ## 📁 项目结构
 
 ```
-exam-web/
+pdf-quiz-practice/
 ├── package.json          # 根级脚本（npm start 同时启动前后端）
 ├── client/               # 前端 React 应用
 │   ├── src/
