@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ExamPractice } from './pages/ExamPractice';
@@ -16,10 +16,11 @@ function App() {
   // 如果环境变量未定义，则自动推断：
   // 1. 如果是 localhost 访问，默认用 localhost:3000
   // 2. 如果是局域网 IP 访问 (如 192.168.x.x)，默认尝试同 IP 的 3000 端口
-  const baseUrl = import.meta.env.VITE_API_BASE_URL ?? 
+  const baseUrl =
+    import.meta.env.VITE_API_BASE_URL ??
     `${window.location.protocol}//${window.location.hostname}:3000`;
 
-  const loadExamList = async () => {
+  const loadExamList = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${baseUrl}/exams`);
@@ -34,11 +35,11 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [baseUrl]);
 
   useEffect(() => {
     void loadExamList();
-  }, []);
+  }, [loadExamList]);
 
   const handleUpload = async (file: File, templateId?: number) => {
     setLoading(true);
@@ -158,10 +159,7 @@ function App() {
               />
             }
           />
-          <Route
-            path="/templates"
-            element={<TemplateConfig baseUrl={baseUrl} />}
-          />
+          <Route path="/templates" element={<TemplateConfig baseUrl={baseUrl} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>

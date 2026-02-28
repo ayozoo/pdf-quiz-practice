@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { BookOpen, Settings, GraduationCap, FileText } from 'lucide-react';
 
@@ -16,7 +16,7 @@ export function Layout({ children }: LayoutProps) {
           </div>
           {/* <span className="logo-text">Exam</span> */}
         </div>
-        
+
         <nav className="main-nav">
           <NavLink
             to="/"

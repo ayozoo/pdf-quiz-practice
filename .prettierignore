@@ -1,0 +1,17 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+build/
+coverage/
+
+# 数据文件
+*.db
+*.sqlite
+
+# 自动生成文件
+package-lock.json
+
+# 环境变量
+.env*

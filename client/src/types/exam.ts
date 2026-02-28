@@ -57,7 +57,10 @@ export interface PdfTemplateConfig {
   updatedAt: string;
 }
 
-export type CreateTemplatePayload = Omit<PdfTemplateConfig, 'id' | 'isBuiltin' | 'createdAt' | 'updatedAt'>;
+export type CreateTemplatePayload = Omit<
+  PdfTemplateConfig,
+  'id' | 'isBuiltin' | 'createdAt' | 'updatedAt'
+>;
 export type UpdateTemplatePayload = Partial<CreateTemplatePayload>;
 
 /** 样本分析/AI 生成返回的建议正则 */

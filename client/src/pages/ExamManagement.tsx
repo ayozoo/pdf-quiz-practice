@@ -67,9 +67,7 @@ export function ExamManagement({
                 className="tpl-field-input tpl-select"
                 value={selectedTemplateId ?? ''}
                 onChange={(e) =>
-                  setSelectedTemplateId(
-                    e.target.value ? parseInt(e.target.value, 10) : undefined,
-                  )
+                  setSelectedTemplateId(e.target.value ? parseInt(e.target.value, 10) : undefined)
                 }
               >
                 <option value="">默认模版</option>
@@ -117,11 +115,9 @@ export function ExamManagement({
               </button>
             )}
           </div>
-          
+
           {examList.length === 0 ? (
-            <div className="empty-state">
-              暂无试卷，请先上传。
-            </div>
+            <div className="empty-state">暂无试卷，请先上传。</div>
           ) : (
             <ul className="management-list">
               {examList.map((exam) => (

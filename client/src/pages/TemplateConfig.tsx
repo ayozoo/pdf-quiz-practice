@@ -1,5 +1,12 @@
-import { useState, useEffect, type ChangeEvent } from 'react';
-import type { PdfTemplateConfig, CreateTemplatePayload, SuggestedPatterns } from '../types/exam';
+import { useState, useEffect, useCallback, type ChangeEvent } from 'react';
+import type {
+  PdfTemplateConfig,
+  CreateTemplatePayload,
+  SuggestedPatterns,
+  ParsedExam,
+  ParsedQuestion,
+  AnswerOption,
+} from '../types/exam';
 import {
   Plus,
   Copy,
@@ -9,7 +16,6 @@ import {
   ChevronDown,
   ChevronRight,
   Shield,
-  FileText,
   AlertCircle,
   Upload,
   Eye,
@@ -47,7 +53,7 @@ const FIELD_META: {
     key: 'optionPattern',
     label: '选项识别正则',
     desc: '识别选项行（如 "A. xxx"）。捕获组1=选项标签字母。',
-    placeholder: '^([A-F])[).:]\s+',
+    placeholder: '^([A-F])[).]\\s+',
   },
   {
     key: 'correctAnswerLinePattern',
@@ -85,7 +91,8 @@ const FIELD_META: {
     key: 'noiseLinePatterns',
     label: '噪音行过滤',
     desc: 'JSON 数组格式，每项为一个正则表达式。匹配到的行在预处理时被移除（如页眉页脚、广告水印等）。',
-    placeholder: '["^The Leader of IT Certification$","^Cert\\\\s?Leader","^100% Valid and Newest Version"]',
+    placeholder:
+      '["^The Leader of IT Certification$","^Cert\\\\s?Leader","^100% Valid and Newest Version"]',
   },
 ];
 
@@ -101,7 +108,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
   // 预览相关
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewTemplateId, setPreviewTemplateId] = useState<number | null>(null);
-  const [previewResult, setPreviewResult] = useState<any>(null);
+  const [previewResult, setPreviewResult] = useState<ParsedExam | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
 
   // 样本驱动创建 wizard
@@ -112,21 +119,20 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
   const [analyzing, setAnalyzing] = useState(false);
 
   // AI 配置
-  const [useAi, setUseAi] = useState(false);
   const [showAiConfig, setShowAiConfig] = useState(false);
   const [aiEndpoint, setAiEndpoint] = useState(
     () => localStorage.getItem('tpl_ai_endpoint') || 'https://api.openai.com/v1/chat/completions',
   );
-  const [aiKey, setAiKey] = useState(
-    () => localStorage.getItem('tpl_ai_key') || '',
-  );
+  const [aiKey, setAiKey] = useState(() => localStorage.getItem('tpl_ai_key') || '');
   const [aiModel, setAiModel] = useState(
     () => localStorage.getItem('tpl_ai_model') || 'gpt-4o-mini',
   );
   const [testingAi, setTestingAi] = useState(false);
-  const [aiTestResult, setAiTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [aiTestResult, setAiTestResult] = useState<{ success: boolean; message: string } | null>(
+    null,
+  );
 
-  const loadTemplates = async () => {
+  const loadTemplates = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch(`${baseUrl}/templates`);
@@ -138,11 +144,11 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [baseUrl]);
 
   useEffect(() => {
     void loadTemplates();
-  }, []);
+  }, [loadTemplates]);
 
   const handleCreate = async () => {
     if (!editForm.name?.trim()) {
@@ -368,7 +374,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
       setAiTestResult({ success: false, message: '请先配置 AI API Key' });
       return;
     }
-    
+
     // 保存 AI 配置到 localStorage
     localStorage.setItem('tpl_ai_endpoint', aiEndpoint);
     localStorage.setItem('tpl_ai_key', aiKey);
@@ -377,7 +383,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
     try {
       setTestingAi(true);
       setAiTestResult(null);
-      
+
       // 直接在前端调用 AI 接口进行测试，验证 URL、Key 和 Model 是否正确
       const response = await fetch(aiEndpoint, {
         method: 'POST',
@@ -406,9 +412,9 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
         message: '连接成功！配置正确。',
       });
     } catch (err) {
-      setAiTestResult({ 
-        success: false, 
-        message: `连接异常: ${err instanceof Error ? err.message : String(err)}` 
+      setAiTestResult({
+        success: false,
+        message: `连接异常: ${err instanceof Error ? err.message : String(err)}`,
       });
     } finally {
       setTestingAi(false);
@@ -455,7 +461,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
   const renderFormField = (
     field: (typeof FIELD_META)[number],
     values: Partial<CreateTemplatePayload>,
-    onChange: (key: string, value: any) => void,
+    onChange: (key: string, value: string | boolean) => void,
     disabled: boolean,
   ) => {
     if (field.isToggle) {
@@ -510,10 +516,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
           <div className="error-alert">
             <AlertCircle size={16} />
             <span>{error}</span>
-            <button
-              className="tpl-error-close"
-              onClick={() => setError(null)}
-            >
+            <button className="tpl-error-close" onClick={() => setError(null)}>
               <X size={14} />
             </button>
           </div>
@@ -547,13 +550,16 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
           {wizardStep === 'input' && (
             <div className="tpl-edit-card wizard-card">
               <div className="tpl-edit-header">
-                <h4><Wand2 size={16} /> 从样本创建模版</h4>
+                <h4>
+                  <Wand2 size={16} /> 从样本创建模版
+                </h4>
                 <button className="tpl-btn-icon" onClick={cancelEdit}>
                   <X size={16} />
                 </button>
               </div>
               <p className="wizard-desc">
-                粘贴 1–2 道完整的示例题目文本（包含题号、题目、选项、答案等），系统将自动识别格式并生成解析规则。
+                粘贴 1–2
+                道完整的示例题目文本（包含题号、题目、选项、答案等），系统将自动识别格式并生成解析规则。
               </p>
               <textarea
                 className="wizard-textarea"
@@ -566,10 +572,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
 
               {/* AI 配置折叠区 */}
               <div className="wizard-ai-section">
-                <button
-                  className="wizard-ai-toggle"
-                  onClick={() => setShowAiConfig(!showAiConfig)}
-                >
+                <button className="wizard-ai-toggle" onClick={() => setShowAiConfig(!showAiConfig)}>
                   <Settings2 size={14} />
                   AI 设置 {showAiConfig ? '▾' : '▸'}
                 </button>
@@ -605,7 +608,15 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                         placeholder="gpt-4o-mini"
                       />
                     </div>
-                    <div className="wizard-ai-actions" style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div
+                      className="wizard-ai-actions"
+                      style={{
+                        marginTop: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                      }}
+                    >
                       <button
                         className="btn-nav btn-sm"
                         onClick={handleTestAiConnection}
@@ -614,7 +625,12 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                         {testingAi ? '测试中...' : '测试连通性'}
                       </button>
                       {aiTestResult && (
-                        <span style={{ fontSize: '12px', color: aiTestResult.success ? '#10b981' : '#ef4444' }}>
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            color: aiTestResult.success ? '#10b981' : '#ef4444',
+                          }}
+                        >
                           {aiTestResult.message}
                         </span>
                       )}
@@ -652,7 +668,9 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
           {wizardStep === 'review' && (
             <div className="tpl-edit-card wizard-card">
               <div className="tpl-edit-header">
-                <h4><Wand2 size={16} /> 审核生成结果</h4>
+                <h4>
+                  <Wand2 size={16} /> 审核生成结果
+                </h4>
                 <button className="tpl-btn-icon" onClick={() => setWizardStep('input')}>
                   ← 重新分析
                 </button>
@@ -691,7 +709,9 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                       false,
                     )}
                     {hint && (
-                      <p className={`wizard-hint ${hint.startsWith('未识别') || hint.startsWith('⚠') ? 'wizard-hint-warn' : 'wizard-hint-ok'}`}>
+                      <p
+                        className={`wizard-hint ${hint.startsWith('未识别') || hint.startsWith('⚠') ? 'wizard-hint-warn' : 'wizard-hint-ok'}`}
+                      >
                         {hint}
                       </p>
                     )}
@@ -725,9 +745,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                   className="tpl-field-input"
                   placeholder="如：ExamTopics SAA-C03"
                   value={editForm.name || ''}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, name: e.target.value })
-                  }
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                 />
               </div>
               <div className="tpl-form-field">
@@ -737,14 +755,14 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                   className="tpl-field-input"
                   placeholder="对此模版的简要说明"
                   value={editForm.description || ''}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, description: e.target.value })
-                  }
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                 />
               </div>
               {FIELD_META.map((field) =>
-                renderFormField(field, editForm, (key, val) =>
-                  setEditForm({ ...editForm, [key]: val }),
+                renderFormField(
+                  field,
+                  editForm,
+                  (key, val) => setEditForm({ ...editForm, [key]: val }),
                   false,
                 ),
               )}
@@ -768,9 +786,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                   {/* 折叠头 */}
                   <div
                     className="tpl-item-header"
-                    onClick={() =>
-                      setExpandedId(expandedId === tpl.id ? null : tpl.id)
-                    }
+                    onClick={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)}
                   >
                     <div className="tpl-item-toggle">
                       {expandedId === tpl.id ? (
@@ -788,9 +804,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                         )}
                         {tpl.name}
                       </div>
-                      {tpl.description && (
-                        <div className="tpl-item-desc">{tpl.description}</div>
-                      )}
+                      {tpl.description && <div className="tpl-item-desc">{tpl.description}</div>}
                     </div>
                     <div className="tpl-item-actions" onClick={(e) => e.stopPropagation()}>
                       <button
@@ -826,9 +840,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                               type="text"
                               className="tpl-field-input"
                               value={editForm.name || ''}
-                              onChange={(e) =>
-                                setEditForm({ ...editForm, name: e.target.value })
-                              }
+                              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                             />
                           </div>
                           <div className="tpl-form-field">
@@ -843,8 +855,10 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                             />
                           </div>
                           {FIELD_META.map((field) =>
-                            renderFormField(field, editForm, (key, val) =>
-                              setEditForm({ ...editForm, [key]: val }),
+                            renderFormField(
+                              field,
+                              editForm,
+                              (key, val) => setEditForm({ ...editForm, [key]: val }),
                               false,
                             ),
                           )}
@@ -884,10 +898,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                           })}
                           {!tpl.isBuiltin && (
                             <div className="tpl-edit-actions">
-                              <button
-                                className="btn-primary btn-sm"
-                                onClick={() => startEdit(tpl)}
-                              >
+                              <button className="btn-primary btn-sm" onClick={() => startEdit(tpl)}>
                                 编辑模版
                               </button>
                             </div>
@@ -916,9 +927,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
               className="tpl-field-input tpl-select"
               value={previewTemplateId ?? ''}
               onChange={(e) =>
-                setPreviewTemplateId(
-                  e.target.value ? parseInt(e.target.value, 10) : null,
-                )
+                setPreviewTemplateId(e.target.value ? parseInt(e.target.value, 10) : null)
               }
             >
               <option value="">选择模版...</option>
@@ -956,12 +965,14 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
           {previewResult && (
             <div className="tpl-preview-result">
               <div className="tpl-preview-summary">
-                <strong>标题：</strong>{previewResult.title} &nbsp;|&nbsp;
-                <strong>题目数：</strong>{previewResult.questions?.length ?? 0}
+                <strong>标题：</strong>
+                {previewResult.title} &nbsp;|&nbsp;
+                <strong>题目数：</strong>
+                {previewResult.questions?.length ?? 0}
               </div>
               {previewResult.questions?.length > 0 && (
                 <div className="tpl-preview-questions">
-                  {previewResult.questions.slice(0, 3).map((q: any, i: number) => (
+                  {previewResult.questions.slice(0, 3).map((q: ParsedQuestion, i: number) => (
                     <div key={i} className="tpl-preview-q">
                       <div className="tpl-preview-q-header">
                         第 {q.number ?? i + 1} 题
@@ -976,7 +987,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                         {q.text?.length > 150 ? '...' : ''}
                       </div>
                       <div className="tpl-preview-q-options">
-                        {q.options?.map((opt: any) => (
+                        {q.options?.map((opt: AnswerOption) => (
                           <span key={opt.label} className="tpl-preview-opt">
                             {opt.label}. {opt.text?.slice(0, 60)}
                             {opt.text?.length > 60 ? '...' : ''}

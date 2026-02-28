@@ -23,15 +23,12 @@ function isUploadedFile(value: unknown): value is UploadedFile {
     buffer?: unknown;
     originalname?: unknown;
   };
-  return (
-    candidate.buffer instanceof Buffer &&
-    typeof candidate.originalname === 'string'
-  );
+  return candidate.buffer instanceof Buffer && typeof candidate.originalname === 'string';
 }
 
 @Injectable()
 export class PdfService {
-  constructor(private readonly templateService: TemplateService) { }
+  constructor(private readonly templateService: TemplateService) {}
 
   /**
    * 解析 PDF 文件。
@@ -68,11 +65,7 @@ export class PdfService {
     return this.parsePdf(file, templateId);
   }
 
-  private parseExamText(
-    rawText: string,
-    filename: string,
-    template: PdfTemplate,
-  ): ParsedExam {
+  private parseExamText(rawText: string, filename: string, template: PdfTemplate): ParsedExam {
     // Step 1: 基础换行归一化
     let text = rawText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
@@ -110,9 +103,21 @@ export class PdfService {
     // 构建"需保护"的模版结构正则，防止误删答案行 / 选项行 / 题目头
     // 注意：频率 key 是 lowercased，所以所有保护正则都需要 'i' 标志
     const preservePatterns: RegExp[] = [];
-    try { preservePatterns.push(new RegExp(template.optionPattern, 'i')); } catch { /* skip */ }
-    try { preservePatterns.push(new RegExp(template.correctAnswerLinePattern, 'i')); } catch { /* skip */ }
-    try { preservePatterns.push(new RegExp(template.questionSplitPattern, 'im')); } catch { /* skip */ }
+    try {
+      preservePatterns.push(new RegExp(template.optionPattern, 'i'));
+    } catch {
+      /* skip */
+    }
+    try {
+      preservePatterns.push(new RegExp(template.correctAnswerLinePattern, 'i'));
+    } catch {
+      /* skip */
+    }
+    try {
+      preservePatterns.push(new RegExp(template.questionSplitPattern, 'im'));
+    } catch {
+      /* skip */
+    }
 
     const NOISE_THRESHOLD = 3;
     const autoNoiseLines = new Set<string>();
@@ -131,9 +136,15 @@ export class PdfService {
       try {
         const patterns = JSON.parse(template.noiseLinePatterns) as string[];
         for (const p of patterns) {
-          try { noiseRegexes.push(new RegExp(p, 'i')); } catch { /* skip */ }
+          try {
+            noiseRegexes.push(new RegExp(p, 'i'));
+          } catch {
+            /* skip */
+          }
         }
-      } catch { /* skip */ }
+      } catch {
+        /* skip */
+      }
     }
 
     // Step 6: 过滤噪音 → 合并
@@ -152,9 +163,7 @@ export class PdfService {
       for (let i = 0; i < matches.length; i += 1) {
         const start = matches[i].index ?? 0;
         const end =
-          i + 1 < matches.length
-            ? (matches[i + 1].index ?? normalized.length)
-            : normalized.length;
+          i + 1 < matches.length ? (matches[i + 1].index ?? normalized.length) : normalized.length;
         const block = normalized.slice(start, end).trim();
         if (block.length > 0) {
           blocks.push(block);
@@ -185,10 +194,7 @@ export class PdfService {
     };
   }
 
-  private tryParseQuestionBlock(
-    block: string,
-    template: PdfTemplate,
-  ): ParsedQuestion | null {
+  private tryParseQuestionBlock(block: string, template: PdfTemplate): ParsedQuestion | null {
     const lines = block
       .split('\n')
       .map((l) => l.trim())
@@ -200,19 +206,15 @@ export class PdfService {
 
     // 使用模版的 correctAnswerLinePattern 定位正确答案行
     const correctLineRegex = new RegExp(template.correctAnswerLinePattern, 'i');
-    const correctLineIndex = lines.findIndex((line) =>
-      correctLineRegex.test(line),
-    );
+    const correctLineIndex = lines.findIndex((line) => correctLineRegex.test(line));
 
-    const qaLines =
-      correctLineIndex === -1 ? lines : lines.slice(0, correctLineIndex);
+    const qaLines = correctLineIndex === -1 ? lines : lines.slice(0, correctLineIndex);
 
     if (qaLines.length === 0) {
       return null;
     }
 
-    const discussionLines =
-      correctLineIndex === -1 ? [] : lines.slice(correctLineIndex + 1);
+    const discussionLines = correctLineIndex === -1 ? [] : lines.slice(correctLineIndex + 1);
 
     const firstLine = qaLines[0];
 
@@ -269,9 +271,7 @@ export class PdfService {
         questionTextLines.push(rest);
       }
       if (firstOptionIndex > 1) {
-        questionTextLines = questionTextLines.concat(
-          qaLines.slice(1, firstOptionIndex),
-        );
+        questionTextLines = questionTextLines.concat(qaLines.slice(1, firstOptionIndex));
       }
     } else if (numberedLineMatch) {
       const rest = numberedLineMatch[2] ? numberedLineMatch[2].trim() : '';
@@ -279,9 +279,7 @@ export class PdfService {
         questionTextLines.push(rest);
       }
       if (firstOptionIndex > 1) {
-        questionTextLines = questionTextLines.concat(
-          qaLines.slice(1, firstOptionIndex),
-        );
+        questionTextLines = questionTextLines.concat(qaLines.slice(1, firstOptionIndex));
       }
     } else {
       questionTextLines = qaLines.slice(0, firstOptionIndex);
@@ -318,13 +316,9 @@ export class PdfService {
     let comments: DiscussionComment[] | undefined;
 
     if (template.hasDiscussion && discussionLines.length > 0) {
-      discussion =
-        this.cleanDiscussion(discussionLines.join('\n').trim()) || undefined;
+      discussion = this.cleanDiscussion(discussionLines.join('\n').trim()) || undefined;
       if (discussion && template.discussionDatePattern) {
-        comments = this.parseDiscussionComments(
-          discussion,
-          template.discussionDatePattern,
-        );
+        comments = this.parseDiscussionComments(discussion, template.discussionDatePattern);
       }
     }
 
@@ -339,10 +333,7 @@ export class PdfService {
     };
   }
 
-  private extractCorrectAnswers(
-    lines: string[],
-    template: PdfTemplate,
-  ): AnswerOptionLabel[] {
+  private extractCorrectAnswers(lines: string[], template: PdfTemplate): AnswerOptionLabel[] {
     const joined = lines.join(' ');
 
     // 使用模版的 correctAnswerExtractPattern
@@ -364,10 +355,7 @@ export class PdfService {
     return cleaned.split('') as AnswerOptionLabel[];
   }
 
-  private extractExplanation(
-    lines: string[],
-    template: PdfTemplate,
-  ): string | undefined {
+  private extractExplanation(lines: string[], template: PdfTemplate): string | undefined {
     const joined = lines.join('\n');
 
     // explanationPattern 可选，未配置则跳过主正则，仅尝试中文兜底
@@ -376,7 +364,9 @@ export class PdfService {
     if (template.explanationPattern) {
       try {
         explanationMatch = joined.match(new RegExp(template.explanationPattern, 'is'));
-      } catch { /* 跳过无效正则 */ }
+      } catch {
+        /* 跳过无效正则 */
+      }
     }
 
     if (!explanationMatch) {
@@ -478,10 +468,7 @@ export class PdfService {
           if (contentBuffer.length > 0) {
             const lastLine = contentBuffer[contentBuffer.length - 1];
 
-            if (
-              lastLine.includes('Highly Voted') ||
-              lastLine.includes('Most Recent')
-            ) {
+            if (lastLine.includes('Highly Voted') || lastLine.includes('Most Recent')) {
               if (lastLine.includes('Highly Voted')) isHighlyVoted = true;
               if (lastLine.includes('Most Recent')) isMostRecent = true;
               contentBuffer.pop(); // 消耗 Badge 行
@@ -518,14 +505,10 @@ export class PdfService {
           let content = contentBuffer.join('\n').trim();
 
           // 提取 Selected Answer
-          const selectedMatch = content.match(
-            /Selected Answer:\s*([A-F,\s]+)/i,
-          );
+          const selectedMatch = content.match(/Selected Answer:\s*([A-F,\s]+)/i);
           if (selectedMatch) {
             currentComment.selectedAnswer = selectedMatch[1].trim();
-            content = content
-              .replace(/Selected Answer:\s*[A-F,\s]+/i, '')
-              .trim();
+            content = content.replace(/Selected Answer:\s*[A-F,\s]+/i, '').trim();
           }
 
           // 提取 Vote Count

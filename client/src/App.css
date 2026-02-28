@@ -3,25 +3,25 @@
   --primary-color: #4f46e5; /* Indigo 600 */
   --primary-hover: #4338ca; /* Indigo 700 */
   --primary-light: #e0e7ff; /* Indigo 100 */
-  
+
   --bg-color: #f8fafc; /* Slate 50 - 更柔和的背景 */
   --card-bg: #ffffff;
-  
+
   --text-main: #0f172a; /* Slate 900 */
   --text-secondary: #64748b; /* Slate 500 */
   --text-muted: #94a3b8; /* Slate 400 */
-  
+
   --border-color: #e2e8f0; /* Slate 200 */
   --border-light: #f1f5f9; /* Slate 100 */
-  
+
   --success-color: #10b981;
   --success-bg: #d1fae5;
   --error-color: #ef4444;
   --error-bg: #fee2e2;
-  
+
   --selected-bg: #eef2ff; /* Indigo 50 */
   --selected-border: #c7d2fe; /* Indigo 200 */
-  
+
   /* 侧边栏 - 现代化深色 */
   --sidebar-bg: #0f172a; /* Slate 900 */
   --sidebar-text: #94a3b8; /* Slate 400 */
@@ -34,7 +34,7 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-card: 0 2px 12px rgba(15, 23, 42, 0.04);
-  
+
   /* 圆角系统 */
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -48,7 +48,15 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
   background-color: var(--bg-color);
   color: var(--text-main);
   line-height: 1.6;
@@ -332,7 +340,8 @@ body {
   align-items: center;
 }
 
-.sidebar-loading, .sidebar-empty {
+.sidebar-loading,
+.sidebar-empty {
   padding: 24px;
   text-align: center;
   color: var(--text-secondary);
@@ -616,7 +625,8 @@ body {
   border-top: 1px solid var(--border-light);
 }
 
-.nav-buttons, .control-buttons {
+.nav-buttons,
+.control-buttons {
   display: flex;
   gap: 16px;
 }
@@ -683,7 +693,8 @@ button:focus-visible {
 }
 
 /* Explanation & Discussion Box */
-.explanation-box, .discussion-box {
+.explanation-box,
+.discussion-box {
   margin-top: 24px;
   padding: 20px;
   border-radius: 6px;
@@ -831,7 +842,10 @@ button:focus-visible {
   gap: 8px;
 }
 
-.comment-header-new, .comment-user-row, .comment-badges-row, .comment-date-row {
+.comment-header-new,
+.comment-user-row,
+.comment-badges-row,
+.comment-date-row {
   display: none;
 }
 
@@ -853,7 +867,8 @@ button:focus-visible {
   border: none;
 }
 
-.badge.highly-voted, .badge.most-recent {
+.badge.highly-voted,
+.badge.most-recent {
   background-color: transparent;
   color: #475569;
   border: none;
@@ -949,7 +964,9 @@ button:focus-visible {
   flex: 1;
   min-width: 200px;
   color: var(--text-secondary);
-  transition: border-color 0.2s, background-color 0.2s;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
   background-color: #f9fafb;
 }
 
@@ -1568,7 +1585,7 @@ button:focus-visible {
     border-radius: 0;
     gap: 2px;
   }
-  
+
   .nav-label {
     font-size: 10px;
     display: block; /* Ensure label is shown */
@@ -1597,14 +1614,14 @@ button:focus-visible {
     transition: transform 0.3s ease;
     width: 85% !important; /* Override inline styles */
     max-width: 320px;
-    box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
     border-right: none;
   }
 
   .practice-sidebar.mobile-open {
     transform: translateX(0);
   }
-  
+
   /* Mobile Sidebar Overlay */
   .practice-sidebar-overlay {
     position: absolute;
@@ -1618,7 +1635,7 @@ button:focus-visible {
     pointer-events: none;
     transition: opacity 0.3s ease;
   }
-  
+
   .practice-sidebar-overlay.visible {
     opacity: 1;
     pointer-events: auto;
@@ -1634,7 +1651,7 @@ button:focus-visible {
     padding-top: 60px; /* Make space for the menu button */
     width: 100%;
   }
-  
+
   .practice-content {
     padding-bottom: 80px; /* Extra padding for bottom nav */
   }
@@ -1649,7 +1666,7 @@ button:focus-visible {
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .question-header > span.question-number {
     font-size: 1rem;
   }
@@ -1664,40 +1681,42 @@ button:focus-visible {
     gap: 16px;
   }
 
-  .nav-buttons, .control-buttons {
+  .nav-buttons,
+  .control-buttons {
     width: 100%;
     justify-content: space-between;
   }
-  
-  .nav-buttons button, .control-buttons button {
+
+  .nav-buttons button,
+  .control-buttons button {
     flex: 1;
     justify-content: center;
   }
-  
+
   /* Management Page Mobile */
   .management-page {
     padding: 16px;
   }
-  
+
   .upload-area {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .file-label {
     min-width: 0;
   }
-  
+
   .management-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .management-item .btn-danger {
     align-self: flex-end;
   }
-  
+
   .btn-upload {
     width: 100%;
   }
@@ -1706,7 +1725,7 @@ button:focus-visible {
     width: 100%;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
   }
 
@@ -1726,7 +1745,7 @@ button:focus-visible {
   background-color: white;
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 @media (max-width: 768px) {
