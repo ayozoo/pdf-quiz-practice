@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { ExamListSidebar } from '../components/ExamListSidebar';
 import { QuestionCard } from '../components/QuestionCard';
 import { QuestionNavigator } from '../components/QuestionNavigator';
@@ -23,6 +24,18 @@ export function ExamPractice({ examList, currentExam, loading, onSelectExam }: E
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<Record<number, AnswerOptionLabel[]>>({});
   const [submittedMap, setSubmittedMap] = useState<Record<number, boolean>>({});
+
+  useKeyboardShortcuts({
+    onPrev: () => currentIndex > 0 && handlePrev(),
+    onNext: () => currentExam && currentIndex < currentExam.questions.length - 1 && handleNext(),
+    onSubmit: () => !submittedMap[currentIndex] && handleSubmit(),
+    onSelectOption: (index) => {
+      const q = currentExam?.questions[currentIndex];
+      if (q && q.options && q.options[index] && !submittedMap[currentIndex]) {
+        handleToggleOption(q.options[index].label);
+      }
+    },
+  });
 
   // 追踪上一次的 examId，用于在 render 期间同步 localStorage 进度（React 推荐的派生状态模式）
   const [prevExamId, setPrevExamId] = useState<number | undefined>(currentExam?.id);
@@ -183,9 +196,12 @@ export function ExamPractice({ examList, currentExam, loading, onSelectExam }: E
   };
 
   return (
-    <div className="practice-layout">
+    <div className="flex h-screen w-full overflow-hidden bg-zinc-50 dark:bg-[#121212] text-zinc-800 dark:text-zinc-200 font-sans">
       {/* Mobile Menu Toggle Button */}
-      <button className="mobile-menu-btn" onClick={toggleMobileSidebar}>
+      <button
+        className="md:hidden fixed top-4 right-4 z-50 p-2 rounded-md bg-white dark:bg-[#1f1f1f] border border-zinc-200 dark:border-[#424242] shadow-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#303030] overflow-hidden"
+        onClick={toggleMobileSidebar}
+      >
         {isMobileSidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
@@ -196,7 +212,7 @@ export function ExamPractice({ examList, currentExam, loading, onSelectExam }: E
       />
 
       <aside
-        className={`practice-sidebar ${isMobileSidebarOpen ? 'mobile-open' : ''}`}
+        className={`flex flex-col flex-shrink-0 bg-zinc-50 dark:bg-[#141414] border-r border-zinc-200 dark:border-[#303030] transition-transform z-40 absolute md:relative h-full ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} `}
         style={{ width: `${sidebarWidth}px`, minWidth: '200px', maxWidth: '600px' }}
       >
         {currentExam ? (
@@ -229,16 +245,16 @@ export function ExamPractice({ examList, currentExam, loading, onSelectExam }: E
         onMouseDown={startResizing}
       />
 
-      <main className="practice-main">
+      <main className="flex-1 overflow-y-auto w-full p-4 pt-16 md:p-8 flex justify-center scroll-smooth">
         {!currentExam ? (
           <>
-            <div className="practice-empty desktop-only">
+            <div className="hidden md:flex flex-col items-center justify-center p-12 text-zinc-500 dark:text-zinc-400 text-center gap-2">
               <h2>欢迎开始刷题</h2>
               <p>请从左侧选择一份试卷开始练习。</p>
               {examList.length === 0 && <p>暂无试卷，请先去管理页面上传。</p>}
             </div>
             {/* Mobile: Show exam list directly in main area when no exam selected */}
-            <div className="mobile-only-list">
+            <div className="md:hidden w-full">
               <ExamListSidebar
                 exams={examList}
                 currentExamId={null}
@@ -251,8 +267,8 @@ export function ExamPractice({ examList, currentExam, loading, onSelectExam }: E
             </div>
           </>
         ) : (
-          <div className="practice-content">
-            <div className="exam-header">
+          <div className="w-full max-w-5xl pb-20">
+            <div className="mb-8 text-center">
               <h2>{currentExam.title}</h2>
             </div>
             {questions.length > 0 && currentQuestion ? (
@@ -268,7 +284,9 @@ export function ExamPractice({ examList, currentExam, loading, onSelectExam }: E
                 onToggleOption={handleToggleOption}
               />
             ) : (
-              <div className="practice-error">该试卷暂无题目或题目解析失败。</div>
+              <div className="p-8 text-center text-red-500 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+                该试卷暂无题目或题目解析失败。
+              </div>
             )}
           </div>
         )}

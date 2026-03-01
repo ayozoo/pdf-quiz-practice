@@ -29,18 +29,9 @@ export function QuestionCard({
   const [showDiscussion, setShowDiscussion] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // 当切题时，重置内部状态，但如果题目已经提交过，通常需要保持显示答案状态？
-  // 这里的逻辑是：如果父组件传进来的 isSubmitted 为 true，则自动显示答案。
-  // 但用户也可以手动切换“显示/隐藏”。
-  // 简单起见，如果 isSubmitted 变为 true，我们自动展开一次。
-  useEffect(() => {
-    // 只有当 isSubmitted 状态改变时才触发，避免不必要的重渲染
-    // 并且我们只在变为 true 时自动展开，用户手动关闭后不会强制重新展开
-  }, [isSubmitted]);
+  useEffect(() => {}, [isSubmitted]);
 
-  // 当切题时(question变化)，重置状态
   useEffect(() => {
-    // 异步更新状态以避免副作用
     const timer = setTimeout(() => {
       if (isSubmitted) {
         setShowAnswer(true);
@@ -64,15 +55,8 @@ export function QuestionCard({
 
     const correctText = (question.correctAnswers || []).join(', ');
 
-    const textToCopy = `Question #${question.number ?? currentIndex + 1}
-${question.text}
+    const textToCopy = `Question #${question.number ?? currentIndex + 1}\n${question.text}\n\n${optionsText}\n\nCorrect Answer: ${correctText}${question.explanation ? `\nExplanation:\n${question.explanation}` : ''}`;
 
-${optionsText}
-
-Correct Answer: ${correctText}
-${question.explanation ? `\nExplanation:\n${question.explanation}` : ''}`;
-
-    // Fallback for non-secure contexts (e.g. HTTP on iOS)
     if (!navigator.clipboard || !window.isSecureContext) {
       try {
         const textArea = document.createElement('textarea');
@@ -107,143 +91,201 @@ ${question.explanation ? `\nExplanation:\n${question.explanation}` : ''}`;
   };
 
   if (!question) {
-    return <div className="error-message">题目数据丢失</div>;
+    return (
+      <div className="p-8 text-center text-zinc-500 dark:text-zinc-400 bg-white dark:bg-[#141414] rounded-xl shadow-sm border border-zinc-200 dark:border-[#303030]">
+        题目数据丢失
+      </div>
+    );
   }
 
   const options = question.options || [];
   const correctAnswers = question.correctAnswers || [];
 
   return (
-    <div className="question-card">
-      <div className="question-header">
-        <span className="question-number">Question #{question.number ?? currentIndex + 1}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+    <div className="bg-white dark:bg-[#141414] rounded-2xl shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 p-6 md:p-8 flex flex-col gap-6 md:gap-8 w-full mx-auto transition-all">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h2 className="text-xl font-medium text-zinc-900 dark:text-zinc-100 flex items-baseline gap-2">
+          Question {question.number ?? currentIndex + 1}
+        </h2>
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-medium text-zinc-500 dark:text-zinc-300 whitespace-nowrap bg-zinc-50 dark:bg-zinc-800/80 px-2.5 py-1 rounded-md">
+            {currentIndex + 1} / {totalQuestions}
+          </span>
           <button
             onClick={handleCopyQuestion}
-            className="btn-nav"
-            style={{
-              padding: '4px 8px',
-              fontSize: '0.8rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              color: copied ? 'var(--success-color)' : 'inherit',
-              borderColor: copied ? 'var(--success-color)' : 'var(--border-color)',
-            }}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 bg-transparent ${
+              copied
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-zinc-800'
+            }`}
             title="复制题目和答案"
           >
             {copied ? <Check size={14} /> : <Copy size={14} />}
             {copied ? '已复制' : '复制'}
           </button>
-          <span className="question-progress">
-            {currentIndex + 1} / {totalQuestions}
-          </span>
         </div>
       </div>
 
-      <div className="question-body">
-        <div className="question-text">{question.text}</div>
+      <div className="flex flex-col gap-8">
+        <div className="text-lg text-zinc-800 dark:text-zinc-200 leading-relaxed whitespace-pre-wrap font-medium">
+          {question.text}
+        </div>
 
-        <ul className="option-list">
+        <ul className="flex flex-col gap-3">
           {options.map((opt) => {
             const isSelected = selectedOptions.includes(opt.label);
             const isCorrect = correctAnswers.includes(opt.label);
 
-            // 样式逻辑：
-            // 1. 如果显示答案(showAnswer):
-            //    - 正确选项 -> correct (绿)
-            //    - 选中但错误 -> wrong (红) (可选，用户没要求，但通常刷题网站会有)
-            // 2. 如果没显示答案:
-            //    - 选中 -> selected (蓝/灰)
+            let itemClass =
+              'group flex items-start gap-4 p-4 rounded-xl cursor-pointer transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#141414] ';
 
-            let className = 'option-item';
             if (showAnswer) {
-              if (isCorrect) className += ' correct';
-              else if (isSelected) className += ' wrong';
+              if (isCorrect) {
+                itemClass +=
+                  'bg-emerald-50/80 dark:bg-emerald-500/10 ring-1 ring-emerald-500/50 text-emerald-900 dark:text-zinc-200';
+              } else if (isSelected) {
+                itemClass +=
+                  'bg-red-50/80 dark:bg-red-500/10 ring-1 ring-red-500/50 text-red-900 dark:text-zinc-200';
+              } else {
+                itemClass +=
+                  'ring-1 ring-zinc-200 dark:ring-zinc-800 bg-transparent text-zinc-500 dark:text-zinc-400';
+              }
             } else {
-              if (isSelected) className += ' selected';
+              if (isSelected) {
+                itemClass +=
+                  'bg-blue-50/80 dark:bg-blue-500/10 ring-1 ring-blue-500/50 text-blue-900 dark:text-zinc-200';
+              } else {
+                itemClass +=
+                  'ring-1 ring-zinc-200 dark:ring-zinc-800 bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300';
+              }
             }
 
             return (
               <li
                 key={opt.label}
-                className={className}
+                className={itemClass}
                 onClick={() => !isSubmitted && onToggleOption(opt.label)}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (!isSubmitted && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    onToggleOption(opt.label);
+                  }
+                }}
               >
-                <span className="option-label">{opt.label}.</span>
-                <span className="option-text">{opt.text}</span>
+                <div
+                  className={`flex-shrink-0 mt-0.5 font-medium text-sm w-7 h-7 flex items-center justify-center rounded-md transition-colors ${
+                    showAnswer
+                      ? isCorrect
+                        ? 'bg-emerald-200/50 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400'
+                        : isSelected
+                          ? 'bg-red-200/50 text-red-800 dark:bg-red-500/20 dark:text-red-400'
+                          : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800/80 dark:text-zinc-400'
+                      : isSelected
+                        ? 'bg-blue-200/50 text-blue-800 dark:bg-blue-500/20 dark:text-blue-400'
+                        : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700'
+                  }`}
+                >
+                  {opt.label}
+                </div>
+                <span className="text-base pt-0.5 leading-relaxed">{opt.text}</span>
               </li>
             );
           })}
         </ul>
       </div>
 
-      <div className="question-actions">
-        <div className="nav-buttons">
-          <button onClick={onPrev} disabled={currentIndex === 0} className="btn-nav">
+      <div className="flex flex-wrap items-center justify-between gap-6 pt-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onPrev}
+            disabled={currentIndex === 0}
+            className="py-2 px-4 rounded-lg font-medium text-sm transition-colors text-zinc-700 bg-white ring-1 ring-zinc-200 hover:bg-zinc-50 dark:bg-zinc-800 dark:ring-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-zinc-800"
+          >
             上一题
           </button>
           <button
             onClick={onNext}
             disabled={currentIndex === totalQuestions - 1}
-            className="btn-nav"
+            className="py-2 px-4 rounded-lg font-medium text-sm transition-colors text-zinc-700 bg-white ring-1 ring-zinc-200 hover:bg-zinc-50 dark:bg-zinc-800 dark:ring-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-zinc-800"
           >
             下一题
           </button>
         </div>
 
-        <div className="control-buttons">
-          {!isSubmitted && (
-            <button onClick={onSubmit} className="btn-submit">
-              提交本题
-            </button>
-          )}
-          <button onClick={handleToggleAnswer} className="btn-toggle">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleToggleAnswer}
+            className="py-2 px-4 rounded-lg font-medium text-sm transition-colors bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+          >
             {showAnswer ? '隐藏答案' : '显示答案'}
           </button>
           {question.discussion && (
-            <button onClick={handleToggleDiscussion} className="btn-toggle">
+            <button
+              onClick={handleToggleDiscussion}
+              className="py-2 px-4 rounded-lg font-medium text-sm transition-colors bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            >
               {showDiscussion ? '收起解析' : '展开解析'}
+            </button>
+          )}
+          {!isSubmitted && (
+            <button
+              onClick={onSubmit}
+              className="py-2 px-6 rounded-lg font-medium text-sm transition-all bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm ring-1 ring-zinc-900 dark:ring-zinc-100"
+            >
+              提交本题
             </button>
           )}
         </div>
       </div>
 
       {showAnswer && question.explanation && (
-        <div className="explanation-box">
-          <div className="box-title">解析</div>
-          <div className="box-content">{question.explanation}</div>
+        <div className="mt-2 p-6 rounded-2xl bg-amber-50/50 dark:bg-amber-500/5 ring-1 ring-amber-500/20">
+          <div className="text-sm font-semibold text-amber-800 dark:text-amber-500 mb-3 flex items-center gap-2">
+            <Sparkles size={16} />
+            解析
+          </div>
+          <div className="text-zinc-700 dark:text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap">
+            {question.explanation}
+          </div>
         </div>
       )}
 
       {showDiscussion && (
-        <div className="discussion-box">
-          <div className="box-title">社区讨论 / 详细解析</div>
+        <div className="mt-4 flex flex-col gap-5">
+          <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-2 pb-2">
+            社区讨论 / 详细解析
+          </div>
           {question.comments && question.comments.length > 0 ? (
-            <div className="comments-list">
+            <div className="flex flex-col gap-4">
               {question.comments.map((comment, idx) => (
-                <div key={idx} className="comment-item">
-                  <div className="comment-avatar">
-                    <User size={24} className="avatar-icon" />
+                <div
+                  key={idx}
+                  className="flex gap-4 p-5 rounded-2xl bg-zinc-50/80 dark:bg-zinc-800/20 ring-1 ring-zinc-200/50 dark:ring-zinc-800"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400">
+                      <User size={16} />
+                    </div>
                   </div>
-                  <div className="comment-main">
-                    <div className="comment-header-compact">
-                      <div className="header-top-row">
-                        <span className="user-name">{comment.user}</span>
-                        <span className="dot-separator">•</span>
-                        <span className="comment-date">{comment.date}</span>
-                      </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5 text-xs">
+                      <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                        {comment.user}
+                      </span>
+                      <span className="text-zinc-400">•</span>
+                      <span className="text-zinc-500 dark:text-zinc-400">{comment.date}</span>
 
                       {(comment.isHighlyVoted || comment.isMostRecent) && (
-                        <div className="header-badges-row">
+                        <div className="flex items-center gap-2 ml-1">
                           {comment.isHighlyVoted && (
-                            <span className="badge highly-voted">
-                              <ThumbsUp size={12} style={{ marginRight: 4 }} /> Highly Voted
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                              <ThumbsUp size={10} /> Highly Voted
                             </span>
                           )}
                           {comment.isMostRecent && (
-                            <span className="badge most-recent">
-                              <Sparkles size={12} style={{ marginRight: 4 }} /> Most Recent
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                              <Sparkles size={10} /> Most Recent
                             </span>
                           )}
                         </div>
@@ -251,18 +293,21 @@ ${question.explanation ? `\nExplanation:\n${question.explanation}` : ''}`;
                     </div>
 
                     {comment.selectedAnswer && (
-                      <div className="comment-selected-answer">
-                        <span className="label">Selected Answer:</span>{' '}
-                        <strong>{comment.selectedAnswer}</strong>
+                      <div className="mb-2 text-xs">
+                        <span className="text-zinc-500 dark:text-zinc-400">Selected Answer:</span>{' '}
+                        <strong className="text-zinc-700 dark:text-zinc-300">
+                          {comment.selectedAnswer}
+                        </strong>
                       </div>
                     )}
 
-                    <div className="comment-content">{comment.content}</div>
+                    <div className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
+                      {comment.content}
+                    </div>
 
                     {comment.voteCount !== undefined && (
-                      <div className="comment-votes">
-                        <ThumbsUp size={14} style={{ marginRight: 4 }} /> upvoted{' '}
-                        {comment.voteCount} times
+                      <div className="mt-3 flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
+                        <ThumbsUp size={12} /> upvoted {comment.voteCount} times
                       </div>
                     )}
                   </div>
@@ -270,7 +315,9 @@ ${question.explanation ? `\nExplanation:\n${question.explanation}` : ''}`;
               ))}
             </div>
           ) : (
-            <pre className="box-content">{question.discussion}</pre>
+            <pre className="p-5 rounded-2xl bg-zinc-50/80 dark:bg-zinc-800/20 ring-1 ring-zinc-200/50 dark:ring-zinc-800 text-sm text-zinc-600 dark:text-zinc-300 whitespace-pre-wrap font-sans leading-relaxed">
+              {question.discussion}
+            </pre>
           )}
         </div>
       )}

@@ -25,6 +25,7 @@ import {
   Settings2,
 } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
+import { Drawer } from 'antd';
 
 interface TemplateConfigProps {
   baseUrl: string;
@@ -522,41 +523,27 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
           </div>
         )}
 
-        {/* 模版列表 */}
-        <div className="card">
-          <div className="section-header">
-            <h3>解析模版 ({templates.length})</h3>
-            <div className="section-header-actions">
-              <button
-                className="btn-primary btn-sm"
-                onClick={startWizard}
-                disabled={loading || wizardStep !== 'idle'}
-                title="粘贴示例题目，自动识别格式"
-              >
-                <Wand2 size={14} /> 从样本创建
-              </button>
-              <button
-                className="btn-nav btn-sm"
-                onClick={startCreate}
-                disabled={loading || creating}
-                title="手动填写正则表达式"
-              >
-                <Plus size={14} /> 手动新建
-              </button>
-            </div>
-          </div>
-
-          {/* ── 样本驱动向导 ── */}
-          {wizardStep === 'input' && (
-            <div className="tpl-edit-card wizard-card">
-              <div className="tpl-edit-header">
-                <h4>
-                  <Wand2 size={16} /> 从样本创建模版
-                </h4>
-                <button className="tpl-btn-icon" onClick={cancelEdit}>
-                  <X size={16} />
-                </button>
-              </div>
+        {/* Drawer 抽屉替换所有新建/编辑表单 */}
+        <Drawer
+          title={
+            editingId
+              ? '编辑模版'
+              : wizardStep === 'input'
+                ? '从样本创建模版'
+                : wizardStep === 'review'
+                  ? '审核生成结果'
+                  : '新建模版'
+          }
+          width={650}
+          onClose={cancelEdit}
+          open={creating || wizardStep !== 'idle' || editingId !== null}
+          styles={{ body: { paddingBottom: 80, backgroundColor: 'var(--bg-card)' } }}
+        >
+          {wizardStep === 'input' ? (
+            <div
+              className="wizard-card"
+              style={{ border: 'none', background: 'transparent', padding: 0 }}
+            >
               <p className="wizard-desc">
                 粘贴 1–2
                 道完整的示例题目文本（包含题号、题目、选项、答案等），系统将自动识别格式并生成解析规则。
@@ -570,7 +557,6 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                 spellCheck={false}
               />
 
-              {/* AI 配置折叠区 */}
               <div className="wizard-ai-section">
                 <button className="wizard-ai-toggle" onClick={() => setShowAiConfig(!showAiConfig)}>
                   <Settings2 size={14} />
@@ -641,14 +627,13 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                 )}
               </div>
 
-              <div className="wizard-actions">
+              <div className="tpl-edit-actions" style={{ marginTop: '24px' }}>
                 <button
                   className="btn-primary"
                   onClick={handleAnalyzeSample}
                   disabled={analyzing || !sampleText.trim()}
                 >
-                  <Search size={14} />
-                  {analyzing ? '分析中...' : '智能识别'}
+                  <Search size={14} /> {analyzing ? '分析中...' : '智能识别'}
                 </button>
                 <button
                   className="btn-ai"
@@ -656,30 +641,33 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                   disabled={analyzing || !sampleText.trim()}
                   title={aiKey ? 'AI 辅助生成' : '需先配置 AI API Key'}
                 >
-                  <Sparkles size={14} />
-                  {analyzing ? '生成中...' : 'AI 生成'}
+                  <Sparkles size={14} /> {analyzing ? '生成中...' : 'AI 生成'}
                 </button>
                 <button className="btn-nav" onClick={cancelEdit}>
                   取消
                 </button>
               </div>
             </div>
-          )}
+          ) : (
+            <div
+              className="tpl-edit-section"
+              style={{ border: 'none', background: 'transparent', padding: 0 }}
+            >
+              {wizardStep === 'review' && (
+                <div style={{ marginBottom: 16 }}>
+                  <button
+                    className="tpl-btn-icon"
+                    onClick={() => setWizardStep('input')}
+                    style={{ marginBottom: 12 }}
+                  >
+                    ← 重新分析
+                  </button>
+                  <p className="wizard-desc" style={{ marginTop: 0 }}>
+                    以下正则已从示例文本中推断得出，请核对并补充缺少的字段，然后命名保存。
+                  </p>
+                </div>
+              )}
 
-          {/* ── 样本向导 – 审核/编辑阶段 ── */}
-          {wizardStep === 'review' && (
-            <div className="tpl-edit-card wizard-card">
-              <div className="tpl-edit-header">
-                <h4>
-                  <Wand2 size={16} /> 审核生成结果
-                </h4>
-                <button className="tpl-btn-icon" onClick={() => setWizardStep('input')}>
-                  ← 重新分析
-                </button>
-              </div>
-              <p className="wizard-desc">
-                以下正则已从示例文本中推断得出，请核对并补充缺少的字段，然后命名保存。
-              </p>
               <div className="tpl-form-field">
                 <label className="tpl-field-label">模版名称</label>
                 <input
@@ -703,7 +691,7 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
               {FIELD_META.map((field) => {
                 const hint = wizardHints[field.key];
                 return (
-                  <div key={field.key}>
+                  <div key={field.key} style={{ marginBottom: '16px' }}>
                     {renderFormField(
                       field,
                       editForm,
@@ -720,9 +708,14 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                   </div>
                 );
               })}
-              <div className="tpl-edit-actions">
-                <button className="btn-primary" onClick={handleCreate} disabled={loading}>
-                  <Save size={14} /> 保存模版
+              <div className="tpl-edit-actions" style={{ marginTop: '24px' }}>
+                <button
+                  className="btn-primary"
+                  onClick={() => (editingId ? handleUpdate(editingId) : handleCreate())}
+                  disabled={loading}
+                >
+                  <Save size={14} />{' '}
+                  {editingId ? '保存更改' : wizardStep === 'review' ? '保存模版' : '创建'}
                 </button>
                 <button className="btn-nav" onClick={cancelEdit}>
                   取消
@@ -730,54 +723,31 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
               </div>
             </div>
           )}
+        </Drawer>
 
-          {/* 手动新建表单 */}
-          {creating && (
-            <div className="tpl-edit-card">
-              <div className="tpl-edit-header">
-                <h4>新建模版</h4>
-                <button className="tpl-btn-icon" onClick={cancelEdit}>
-                  <X size={16} />
-                </button>
-              </div>
-              <div className="tpl-form-field">
-                <label className="tpl-field-label">模版名称</label>
-                <input
-                  type="text"
-                  className="tpl-field-input"
-                  placeholder="如：ExamTopics SAA-C03"
-                  value={editForm.name || ''}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                />
-              </div>
-              <div className="tpl-form-field">
-                <label className="tpl-field-label">描述（可选）</label>
-                <input
-                  type="text"
-                  className="tpl-field-input"
-                  placeholder="对此模版的简要说明"
-                  value={editForm.description || ''}
-                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                />
-              </div>
-              {FIELD_META.map((field) =>
-                renderFormField(
-                  field,
-                  editForm,
-                  (key, val) => setEditForm({ ...editForm, [key]: val }),
-                  false,
-                ),
-              )}
-              <div className="tpl-edit-actions">
-                <button className="btn-primary" onClick={handleCreate} disabled={loading}>
-                  <Save size={14} /> 创建
-                </button>
-                <button className="btn-nav" onClick={cancelEdit}>
-                  取消
-                </button>
-              </div>
+        {/* 模版列表 */}
+        <div className="card">
+          <div className="section-header">
+            <h3>解析模版 ({templates.length})</h3>
+            <div className="section-header-actions">
+              <button
+                className="btn-primary btn-sm"
+                onClick={startWizard}
+                disabled={loading || wizardStep !== 'idle'}
+                title="粘贴示例题目，自动识别格式"
+              >
+                <Wand2 size={14} /> 从样本创建
+              </button>
+              <button
+                className="btn-nav btn-sm"
+                onClick={startCreate}
+                disabled={loading || creating}
+                title="手动填写正则表达式"
+              >
+                <Plus size={14} /> 手动新建
+              </button>
             </div>
-          )}
+          </div>
 
           {templates.length === 0 && !creating ? (
             <div className="empty-state">暂无模版，将在首次启动时自动创建默认模版。</div>
@@ -833,80 +803,34 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                   {/* 展开详情 */}
                   {expandedId === tpl.id && (
                     <div className="tpl-item-detail">
-                      {editingId === tpl.id ? (
-                        /* 编辑模式 */
-                        <div className="tpl-edit-section">
-                          <div className="tpl-form-field">
-                            <label className="tpl-field-label">模版名称</label>
-                            <input
-                              type="text"
-                              className="tpl-field-input"
-                              value={editForm.name || ''}
-                              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                            />
-                          </div>
-                          <div className="tpl-form-field">
-                            <label className="tpl-field-label">描述</label>
-                            <input
-                              type="text"
-                              className="tpl-field-input"
-                              value={editForm.description || ''}
-                              onChange={(e) =>
-                                setEditForm({ ...editForm, description: e.target.value })
-                              }
-                            />
-                          </div>
-                          {FIELD_META.map((field) =>
-                            renderFormField(
-                              field,
-                              editForm,
-                              (key, val) => setEditForm({ ...editForm, [key]: val }),
-                              false,
-                            ),
-                          )}
-                          <div className="tpl-edit-actions">
-                            <button
-                              className="btn-primary"
-                              onClick={() => handleUpdate(tpl.id)}
-                              disabled={loading}
-                            >
-                              <Save size={14} /> 保存
-                            </button>
-                            <button className="btn-nav" onClick={cancelEdit}>
-                              取消
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        /* 查看模式 */
-                        <div className="tpl-view-section">
-                          {FIELD_META.map((field) => {
-                            if (field.key === 'discussionDatePattern' && !tpl.hasDiscussion) {
-                              return null;
-                            }
-                            const value = tpl[field.key as keyof PdfTemplateConfig];
-                            return (
-                              <div className="tpl-view-field" key={field.key}>
-                                <span className="tpl-view-label">{field.label}</span>
-                                <span className="tpl-view-value">
-                                  {field.isToggle
-                                    ? value
-                                      ? '✓ 开启'
-                                      : '✗ 关闭'
-                                    : (value as string) || '—'}
-                                </span>
-                              </div>
-                            );
-                          })}
-                          {!tpl.isBuiltin && (
-                            <div className="tpl-edit-actions">
-                              <button className="btn-primary btn-sm" onClick={() => startEdit(tpl)}>
-                                编辑模版
-                              </button>
+                      /* 查看模式 */
+                      <div className="tpl-view-section">
+                        {FIELD_META.map((field) => {
+                          if (field.key === 'discussionDatePattern' && !tpl.hasDiscussion) {
+                            return null;
+                          }
+                          const value = tpl[field.key as keyof PdfTemplateConfig];
+                          return (
+                            <div className="tpl-view-field" key={field.key}>
+                              <span className="tpl-view-label">{field.label}</span>
+                              <span className="tpl-view-value">
+                                {field.isToggle
+                                  ? value
+                                    ? '✓ 开启'
+                                    : '✗ 关闭'
+                                  : (value as string) || '—'}
+                              </span>
                             </div>
-                          )}
-                        </div>
-                      )}
+                          );
+                        })}
+                        {!tpl.isBuiltin && (
+                          <div className="tpl-edit-actions">
+                            <button className="btn-primary btn-sm" onClick={() => startEdit(tpl)}>
+                              编辑模版
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </li>

@@ -14,14 +14,6 @@ export function ExamListSidebar({
   onSelectExam,
   loading,
 }: ExamListSidebarProps) {
-  if (loading && exams.length === 0) {
-    return <div className="sidebar-loading">加载中...</div>;
-  }
-
-  if (exams.length === 0) {
-    return <div className="sidebar-empty">暂无试卷，请先上传</div>;
-  }
-
   const getProgress = (examId: number, totalQuestions: number) => {
     try {
       const saved = localStorage.getItem(`exam_progress_${examId}`);
@@ -48,58 +40,61 @@ export function ExamListSidebar({
   };
 
   return (
-    <div className="exam-sidebar">
-      <h3 className="sidebar-title">试卷列表</h3>
-      <ul className="sidebar-list">
-        {exams.map((exam) => {
-          const progress = getProgress(exam.id, exam.questionCount);
-          return (
-            <li
-              key={exam.id}
-              className={`sidebar-item ${exam.id === currentExamId ? 'active' : ''}`}
-              onClick={() => onSelectExam(exam.id)}
-            >
-              <div className="item-icon">
-                <FileText size={16} />
-              </div>
-              <div className="item-info">
-                <div className="item-title" title={exam.title}>
-                  {exam.title}
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#141414] border-r border-zinc-200 dark:border-[#303030]">
+      <div className="px-6 py-5 pb-2">
+        <h3 className="m-0 text-sm font-semibold text-zinc-500 tracking-wider uppercase">
+          试卷列表
+        </h3>
+      </div>
+
+      {loading && exams.length === 0 ? (
+        <div className="p-8 text-center text-zinc-500 dark:text-zinc-400 text-sm">加载中...</div>
+      ) : exams.length === 0 ? (
+        <div className="p-8 text-center text-zinc-500 dark:text-zinc-400 text-sm">
+          暂无试卷，请先上传
+        </div>
+      ) : (
+        <ul className="flex-1 overflow-y-auto m-0 p-3 list-none flex flex-col gap-1">
+          {exams.map((exam) => {
+            const progress = getProgress(exam.id, exam.questionCount);
+            const isActive = exam.id === currentExamId;
+            const itemClasses = `flex items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 text-left hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 ${
+              isActive
+                ? 'bg-zinc-200/80 dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-zinc-100 font-medium ring-1 ring-zinc-300/50 dark:ring-zinc-700/50'
+                : 'text-zinc-600 dark:text-zinc-400'
+            }`;
+
+            return (
+              <li key={exam.id} className={itemClasses} onClick={() => onSelectExam(exam.id)}>
+                <div className="mr-3 flex-shrink-0 flex items-center justify-center">
+                  <FileText size={16} />
                 </div>
-                <div className="item-meta">
-                  <span>{exam.questionCount} 题</span>
+                <div className="flex-1 min-w-0">
+                  <div className="truncate text-sm mb-1" title={exam.title}>
+                    {exam.title}
+                  </div>
+                  <div className="flex items-center text-xs text-zinc-500 dark:text-zinc-400">
+                    <span>{exam.questionCount} 题</span>
+                    {progress && progress.count > 0 && (
+                      <span className="ml-2 text-blue-500 dark:text-blue-400">
+                        (已做 {progress.count})
+                      </span>
+                    )}
+                  </div>
                   {progress && progress.count > 0 && (
-                    <span style={{ marginLeft: '8px', color: 'var(--primary-color)' }}>
-                      (已做 {progress.count})
-                    </span>
+                    <div className="mt-2 w-full h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 dark:bg-blue-400 transition-all duration-300 ease-in-out"
+                        style={{ width: `${progress.percent}%` }}
+                      />
+                    </div>
                   )}
                 </div>
-                {progress && progress.count > 0 && (
-                  <div
-                    style={{
-                      marginTop: '4px',
-                      width: '100%',
-                      height: '4px',
-                      background: 'var(--border-color)',
-                      borderRadius: '2px',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${progress.percent}%`,
-                        height: '100%',
-                        background: 'var(--primary-color)',
-                        transition: 'width 0.3s ease',
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
