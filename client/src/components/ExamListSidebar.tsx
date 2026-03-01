@@ -80,7 +80,7 @@ export function ExamListSidebar({
                       marginTop: '4px',
                       width: '100%',
                       height: '4px',
-                      background: '#e5e7eb',
+                      background: 'var(--border-color)',
                       borderRadius: '2px',
                       overflow: 'hidden',
                     }}

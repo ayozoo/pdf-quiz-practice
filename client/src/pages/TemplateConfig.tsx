@@ -24,6 +24,7 @@ import {
   Search,
   Settings2,
 } from 'lucide-react';
+import { PageHeader } from '../components/PageHeader';
 
 interface TemplateConfigProps {
   baseUrl: string;
@@ -504,12 +505,11 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
 
   return (
     <div className="management-page">
-      <div className="page-header">
-        <h2>PDF 模版配置</h2>
-        <p className="page-subtitle">
-          配置 PDF 题库的解析规则。每个模版定义一组正则表达式来提取题目、选项、答案等内容。
-        </p>
-      </div>
+      <PageHeader
+        icon={Settings2}
+        title="PDF 模版配置"
+        subtitle="配置 PDF 题库的解析规则。每个模版定义一组正则表达式来提取题目、选项、答案等内容。"
+      />
 
       <div className="management-content">
         {error && (
@@ -628,7 +628,9 @@ export function TemplateConfig({ baseUrl }: TemplateConfigProps) {
                         <span
                           style={{
                             fontSize: '12px',
-                            color: aiTestResult.success ? '#10b981' : '#ef4444',
+                            color: aiTestResult.success
+                              ? 'var(--success-color)'
+                              : 'var(--error-color)',
                           }}
                         >
                           {aiTestResult.message}

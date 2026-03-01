@@ -74,8 +74,10 @@ export function ExamPractice({ examList, currentExam, loading, onSelectExam }: E
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing) return;
 
-      // Limit min and max width
-      const newWidth = Math.max(200, Math.min(600, e.clientX - 72)); // 72 is main-sidebar width
+      // 动态获取 AntD Sider 的实际宽度（通过 practice-layout 容器的 offsetLeft）
+      const practiceEl = document.querySelector('.practice-layout');
+      const siderOffset = practiceEl ? (practiceEl as HTMLElement).getBoundingClientRect().left : 0;
+      const newWidth = Math.max(200, Math.min(600, e.clientX - siderOffset));
       setSidebarWidth(newWidth);
     };
 

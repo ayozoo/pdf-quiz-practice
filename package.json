@@ -8,6 +8,12 @@
     "dev:client": "npm run dev --prefix client",
     "dev:server": "npm run start --prefix server",
     "start": "run-p dev:*",
+    "lint:client": "npm run lint --prefix client",
+    "lint:server": "npm run lint --prefix server",
+    "lint": "run-p lint:client lint:server",
+    "lint:fix:client": "npm run lint:fix --prefix client",
+    "lint:fix:server": "npm run lint:fix --prefix server",
+    "lint:fix": "run-p lint:fix:client lint:fix:server",
     "format": "prettier --write \"client/src/**/*.{ts,tsx,css}\" \"server/src/**/*.ts\" \"./*.{json,md,yml}\" \".github/**/*.yml\"",
     "format:check": "prettier --check \"client/src/**/*.{ts,tsx,css}\" \"server/src/**/*.ts\" \"./*.{json,md,yml}\" \".github/**/*.yml\"",
     "prepare": "husky"

@@ -26,3 +26,28 @@ html.dark body {
   background-color: #141414;
   color: rgba(255, 255, 255, 0.85);
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .border {
+    border-style: solid;
+  }
+  .border-0 {
+    border-style: solid;
+  }
+  .border-t {
+    border-style: solid;
+  }
+  .border-b {
+    border-style: solid;
+  }
+  .border-l {
+    border-style: solid;
+  }
+  .border-r {
+    border-style: solid;
+  }
+}

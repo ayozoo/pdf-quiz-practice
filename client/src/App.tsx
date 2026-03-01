@@ -10,12 +10,33 @@ import type { ExamSummary, ParsedExam } from './types/exam';
 import { useDarkMode } from './hooks/useDarkMode';
 import './App.css';
 
+const baseToken = {
+  colorPrimary: '#4f46e5',
+  borderRadius: 8,
+  fontFamily:
+    'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
+};
+
 const lightTheme = {
   token: {
-    colorPrimary: '#4f46e5',
-    borderRadius: 8,
-    fontFamily:
-      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
+    ...baseToken,
+    colorBgLayout: '#ffffff',
+    colorBgContainer: '#ffffff',
+    colorBgElevated: '#ffffff',
+    colorText: '#000000',
+    colorTextSecondary: '#333333',
+  },
+};
+
+const darkTheme = {
+  algorithm: theme.darkAlgorithm,
+  token: {
+    ...baseToken,
+    colorBgLayout: '#121212',
+    colorBgContainer: '#121212',
+    colorBgElevated: '#1f1f1f',
+    colorText: '#ffffff',
+    colorTextSecondary: '#cccccc',
   },
 };
 
@@ -23,10 +44,7 @@ function App() {
   const [darkMode] = useDarkMode();
 
   return (
-    <ConfigProvider
-      theme={darkMode ? { ...lightTheme, algorithm: theme.darkAlgorithm } : lightTheme}
-      locale={zhCN}
-    >
+    <ConfigProvider theme={darkMode ? darkTheme : lightTheme} locale={zhCN}>
       <AntdApp>
         <AppContent />
       </AntdApp>

@@ -3,10 +3,10 @@
   --primary-color: #4f46e5;
   --primary-hover: #4338ca;
   --primary-light: #e0e7ff;
-  --bg-color: #f8fafc;
+  --bg-color: #ffffff;
   --card-bg: #ffffff;
-  --text-main: #0f172a;
-  --text-secondary: #64748b;
+  --text-main: #000000;
+  --text-secondary: #333333;
   --text-muted: #94a3b8;
   --border-color: #e2e8f0;
   --border-light: #f1f5f9;
@@ -14,6 +14,7 @@
   --success-bg: #d1fae5;
   --error-color: #ef4444;
   --error-bg: #fee2e2;
+  --error-hover: #dc2626;
   --selected-bg: #eef2ff;
   --selected-border: #c7d2fe;
   --sidebar-bg: #0f172a;
@@ -21,16 +22,31 @@
   --sidebar-hover: #1e293b;
   --sidebar-active: #4f46e5;
   --sidebar-active-text: #ffffff;
+
+  /* 滚动条 / 评论区 / 辅助色 */
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
+  --avatar-bg: #f1f5f9;
+  --avatar-color: #64748b;
+  --avatar-fill: #cbd5e1;
+  --badge-color: #475569;
+  --separator-color: #cbd5e1;
+  --wizard-bg: #f0f7ff;
+  --ai-gradient: linear-gradient(135deg, #8b5cf6, #6366f1);
+  --hint-ok-color: #16a34a;
+  --hint-ok-bg: #f0fdf4;
+  --hint-warn-color: #d97706;
+  --hint-warn-bg: #fffbeb;
 }
 
 html.dark {
   --primary-color: #4f46e5;
   --primary-hover: #6366f1;
   --primary-light: rgba(79, 70, 229, 0.2);
-  --bg-color: #141414;
-  --card-bg: #1f1f1f;
-  --text-main: rgba(255, 255, 255, 0.85);
-  --text-secondary: rgba(255, 255, 255, 0.65);
+  --bg-color: #121212;
+  --card-bg: #121212;
+  --text-main: #ffffff;
+  --text-secondary: #cccccc;
   --text-muted: rgba(255, 255, 255, 0.45);
   --border-color: #424242;
   --border-light: #303030;
@@ -38,6 +54,7 @@ html.dark {
   --success-bg: rgba(46, 125, 50, 0.2);
   --error-color: #d32f2f;
   --error-bg: rgba(211, 47, 47, 0.2);
+  --error-hover: #b71c1c;
   --selected-bg: rgba(79, 70, 229, 0.2);
   --selected-border: #4f46e5;
   --sidebar-bg: #141414;
@@ -45,6 +62,21 @@ html.dark {
   --sidebar-hover: #1f1f1f;
   --sidebar-active: #4f46e5;
   --sidebar-active-text: #ffffff;
+
+  /* 滚动条 / 评论区 / 辅助色 (暗色) */
+  --scrollbar-thumb: #555;
+  --scrollbar-thumb-hover: #777;
+  --avatar-bg: #303030;
+  --avatar-color: rgba(255, 255, 255, 0.65);
+  --avatar-fill: #555;
+  --badge-color: rgba(255, 255, 255, 0.65);
+  --separator-color: #555;
+  --wizard-bg: rgba(79, 70, 229, 0.1);
+  --ai-gradient: linear-gradient(135deg, #7c3aed, #4f46e5);
+  --hint-ok-color: #4caf50;
+  --hint-ok-bg: rgba(76, 175, 80, 0.1);
+  --hint-warn-color: #ffb74d;
+  --hint-warn-bg: rgba(255, 183, 77, 0.1);
 }
 
 :root {
@@ -76,7 +108,7 @@ body {
     'Helvetica Neue',
     Arial,
     sans-serif;
-  background-color: var(--bg-color);
+  /* body 背景由 AntD ConfigProvider 主题控制 */
   color: var(--text-main);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -92,104 +124,14 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--scrollbar-thumb);
   border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--scrollbar-thumb-hover);
 }
 
-/* Layout */
-.app-container {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  background-color: var(--bg-color);
-}
-
-/* Left Global Sidebar */
-.main-sidebar {
-  width: 80px;
-  background-color: var(--sidebar-bg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24px 0;
-  flex-shrink: 0;
-  z-index: 100;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.08);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.logo-section {
-  margin-bottom: 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: white;
-}
-
-.logo-icon {
-  color: var(--primary-color);
-  background: rgba(79, 70, 229, 0.15);
-  padding: 10px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0.3);
-}
-
-.main-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  align-items: center;
-  padding: 0 12px;
-}
-
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: var(--radius-md);
-  color: var(--sidebar-text);
-  text-decoration: none;
-  transition: all var(--transition-normal);
-  gap: 6px;
-  position: relative;
-}
-
-.nav-item:hover {
-  background-color: var(--sidebar-hover);
-  color: var(--sidebar-active-text);
-  transform: translateY(-2px);
-}
-
-.nav-item.active {
-  background-color: var(--sidebar-active);
-  color: var(--sidebar-active-text);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-}
-
-.nav-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.app-content {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
+/* Layout: 已迁移至 AntD Layout.Sider + Menu，旧 class 已移除 */
 
 /* Practice Layout */
 .practice-layout {
@@ -459,7 +401,7 @@ body {
 
 .q-nav-item.current {
   background-color: var(--primary-color);
-  color: white;
+  color: #fff;
   border-color: var(--primary-color);
   box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);
 }
@@ -614,7 +556,7 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-full);
-  background: var(--bg-color);
+  background: var(--card-bg);
   font-size: 0.85rem;
   color: var(--text-secondary);
   flex-shrink: 0;
@@ -623,17 +565,17 @@ body {
 
 .selected .option-label {
   background: var(--primary-color);
-  color: white;
+  color: #fff;
 }
 
 .correct .option-label {
   background: var(--success-color);
-  color: white;
+  color: #fff;
 }
 
 .wrong .option-label {
   background: var(--error-color);
-  color: white;
+  color: #fff;
 }
 
 .question-actions {
@@ -695,7 +637,7 @@ button:focus-visible {
 
 .btn-submit {
   background-color: var(--primary-color);
-  color: white;
+  color: #fff;
 }
 
 .btn-submit:hover {
@@ -735,7 +677,7 @@ button:focus-visible {
 
 .box-content {
   white-space: pre-wrap;
-  color: #374151;
+  color: var(--text-main);
   margin: 0;
   font-family: inherit;
   line-height: 1.6;
@@ -762,12 +704,12 @@ button:focus-visible {
 }
 
 .comments-list::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 .comments-list::-webkit-scrollbar-thumb:hover {
-  background-color: #94a3b8;
+  background-color: var(--scrollbar-thumb-hover);
 }
 
 /* Discussion Box Content (Raw Text Fallback) */
@@ -789,7 +731,7 @@ button:focus-visible {
 }
 
 .discussion-box .box-content::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
@@ -814,17 +756,17 @@ button:focus-visible {
   flex-shrink: 0;
   width: 42px;
   height: 42px;
-  background-color: #f1f5f9;
+  background-color: var(--avatar-bg);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
+  color: var(--avatar-color);
 }
 
 .comment-avatar svg {
-  color: #64748b;
-  fill: #cbd5e1;
+  color: var(--avatar-color);
+  fill: var(--avatar-fill);
 }
 
 .comment-main {
@@ -853,7 +795,7 @@ button:focus-visible {
 }
 
 .dot-separator {
-  color: #cbd5e1;
+  color: var(--separator-color);
   font-size: 0.8rem;
 }
 
@@ -871,14 +813,14 @@ button:focus-visible {
 
 .comment-date {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .badge {
   font-size: 0.75rem;
   padding: 0;
   font-weight: 600;
-  color: #475569;
+  color: var(--badge-color);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -890,12 +832,12 @@ button:focus-visible {
 .badge.highly-voted,
 .badge.most-recent {
   background-color: transparent;
-  color: #475569;
+  color: var(--badge-color);
   border: none;
 }
 
 .badge svg {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .comment-selected-answer {
@@ -928,7 +870,7 @@ button:focus-visible {
 .comment-votes {
   margin-top: 8px;
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-style: normal;
   display: flex;
   align-items: center;
@@ -940,8 +882,6 @@ button:focus-visible {
   max-width: 1000px;
   margin: 0 auto;
   width: 100%;
-  overflow-y: auto;
-  height: 100%;
   color: var(--text-main);
 }
 
@@ -1021,7 +961,7 @@ button:focus-visible {
 
 .btn-primary {
   background-color: var(--primary-color);
-  color: white;
+  color: #fff;
 }
 
 .btn-primary:disabled {
@@ -1045,14 +985,14 @@ button:focus-visible {
 
 .btn-danger {
   background-color: var(--error-color);
-  color: white;
+  color: #fff;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .btn-danger:hover {
-  background-color: #dc2626;
+  background-color: var(--error-hover);
 }
 
 .management-list {
@@ -1112,7 +1052,7 @@ button:focus-visible {
 
 /* Template Config Page */
 .tpl-edit-card {
-  background: var(--bg-color);
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 20px;
@@ -1193,7 +1133,7 @@ button:focus-visible {
 }
 
 .tpl-field-input:disabled {
-  background: var(--bg-color);
+  background: var(--card-bg);
   color: var(--text-secondary);
 }
 
@@ -1245,7 +1185,7 @@ button:focus-visible {
 }
 
 .tpl-item-header:hover {
-  background: var(--bg-color);
+  background: var(--card-bg);
   margin: 0 -24px;
   padding-left: 24px;
   padding-right: 24px;
@@ -1360,7 +1300,7 @@ button:focus-visible {
 }
 
 .tpl-preview-summary {
-  background: var(--bg-color);
+  background: var(--card-bg);
   padding: 12px 16px;
   font-size: 0.9rem;
   border-bottom: 1px solid var(--border-color);
@@ -1374,7 +1314,7 @@ button:focus-visible {
 }
 
 .tpl-preview-q {
-  background: var(--bg-color);
+  background: var(--card-bg);
   border-radius: 6px;
   padding: 12px 16px;
 }
@@ -1447,7 +1387,7 @@ button:focus-visible {
 /* Wizard – sample-driven creation */
 .wizard-card {
   border: 2px solid var(--primary-color);
-  background: #f0f7ff;
+  background: var(--wizard-bg);
 }
 
 .wizard-desc {
@@ -1492,8 +1432,8 @@ button:focus-visible {
   font-size: 0.9rem;
   border: none;
   cursor: pointer;
-  background: linear-gradient(135deg, #8b5cf6, #6366f1);
-  color: white;
+  background: var(--ai-gradient);
+  color: #fff;
   transition: opacity 0.2s;
 }
 
@@ -1565,64 +1505,18 @@ button:focus-visible {
 }
 
 .wizard-hint-ok {
-  color: #16a34a;
-  background: #f0fdf4;
+  color: var(--hint-ok-color);
+  background: var(--hint-ok-bg);
 }
 
 .wizard-hint-warn {
-  color: #d97706;
-  background: #fffbeb;
+  color: var(--hint-warn-color);
+  background: var(--hint-warn-bg);
 }
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
-  /* Global Layout - Switch from Left Sidebar to Bottom Nav */
-  .app-container {
-    flex-direction: column;
-    height: 100vh;
-  }
-
-  .main-sidebar {
-    width: 100%;
-    height: 60px; /* Bottom nav height */
-    flex-direction: row;
-    padding: 0;
-    order: 2; /* Move to bottom */
-    justify-content: space-around;
-    background-color: var(--card-bg); /* Adapt to dark mode */
-    border-top: 1px solid var(--border-color);
-    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  .logo-section {
-    display: none; /* Hide logo on mobile to save space */
-  }
-
-  .main-nav {
-    flex-direction: row;
-    height: 100%;
-    width: 100%;
-    justify-content: space-around;
-    gap: 0;
-  }
-
-  .nav-item {
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
-    gap: 2px;
-  }
-
-  .nav-label {
-    font-size: 10px;
-    display: block; /* Ensure label is shown */
-  }
-
-  .app-content {
-    order: 1; /* Content above nav */
-    flex: 1;
-    width: 100%;
-  }
+  /* Global Layout: 已迁移至 AntD Layout + Drawer，旧 sidebar/nav 样式已移除 */
 
   /* Practice Layout - Stack Sidebar and Main Content */
   .practice-layout {
