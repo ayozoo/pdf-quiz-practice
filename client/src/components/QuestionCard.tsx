@@ -231,7 +231,7 @@ export function QuestionCard({
           {!isSubmitted && (
             <button
               onClick={onSubmit}
-              className="py-2 px-6 rounded-lg font-medium text-sm transition-all bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm ring-1 ring-zinc-900 dark:ring-zinc-100"
+              className="py-2 px-6 rounded-lg font-medium text-sm transition-all bg-zinc-900 text-zinc-100 hover:bg-zinc-800 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700 shadow-sm ring-1 ring-zinc-900 dark:ring-zinc-700"
             >
               提交本题
             </button>
