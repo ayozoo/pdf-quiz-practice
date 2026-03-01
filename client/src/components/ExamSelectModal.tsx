@@ -33,7 +33,6 @@ export function ExamSelectModal({
       width={600}
       styles={{
         body: { padding: 0, maxHeight: '60vh', overflowY: 'auto' },
-        content: { padding: 0 },
       }}
       className="exam-select-modal"
     >

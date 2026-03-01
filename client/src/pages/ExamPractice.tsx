@@ -28,7 +28,7 @@ export function ExamPractice({ examList, currentExam, loading, onSelectExam }: E
   useKeyboardShortcuts({
     onPrev: () => currentIndex > 0 && handlePrev(),
     onNext: () => currentExam && currentIndex < currentExam.questions.length - 1 && handleNext(),
-    onSubmit: () => !submittedMap[currentIndex] && handleSubmit(),
+    onSubmit: () => !submittedMap[currentIndex] && handleSubmitCurrent(),
     onSelectOption: (index) => {
       const q = currentExam?.questions[currentIndex];
       if (q && q.options && q.options[index] && !submittedMap[currentIndex]) {
